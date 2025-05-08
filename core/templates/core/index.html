@@ -1,0 +1,492 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section - Presumindo que você tenha essa seção em seu template original -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative">
+        <div class="row min-vh-75 align-items-center py-5">
+            <div class="col-lg-6 animate__animated" data-animation="animate__fadeInLeft">
+                <span class="badge bg-white text-primary fs-6 mb-3 px-3 py-2">Plataforma Educacional</span>
+                <h1 class="display-4 fw-bold text-white mb-4">Apoio especializado para <span
+                        class="highlight-text">Transtorno do Espectro Autista</span></h1>
+                <p class="lead text-white mb-4">Ferramentas pedagógicas, orientações e recursos para apoiar educadores e
+                    famílias no desenvolvimento de pessoas com TEA.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="#recursos" class="btn btn-primary btn-lg">
+                        Explorar recursos
+                    </a>
+                    <a href="{% url 'sobre' %}" class="btn btn-outline-light btn-lg">
+                        Conhecer projeto
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-flex justify-content-center animate__animated" data-animation="animate__fadeInRight">
+                <div class="hero-image-container">
+                    <img src="{% static 'img/placeholder-600x500.jpg' %}"
+                        alt="Crianças e professores em ambiente inclusivo" class="hero-image img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="stats-cards row justify-content-center">
+            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h2 class="stat-number">500+</h2>
+                        <p class="stat-label">Professores assistidos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h2 class="stat-number">25+</h2>
+                        <p class="stat-label">Escolas participantes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-puzzle-piece"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h2 class="stat-number">100+</h2>
+                        <p class="stat-label">Atividades disponíveis</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h2 class="stat-number">1000+</h2>
+                        <p class="stat-label">Alunos beneficiados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="recursos" class="features-section py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-subtitle">O que oferecemos</span>
+            <h2 class="section-title">Recursos para inclusão efetiva</h2>
+            <div class="section-divider"></div>
+            <p class="section-description">
+                Nossa plataforma foi desenvolvida por especialistas para oferecer suporte completo a educadores e
+                famílias.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature Card 1 -->
+            <div class="col-lg-4 col-md-6 animate__animated" data-animation="animate__fadeInUp">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h3 class="feature-title">Ferramentas Pedagógicas</h3>
+                    <p class="feature-description">
+                        Atividades, jogos e materiais estruturados para desenvolvimento cognitivo, social e motor,
+                        adaptados para diferentes níveis de necessidade.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Explorar ferramentas <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature Card 2 -->
+            <div class="col-lg-4 col-md-6 animate__animated" data-animation="animate__fadeInUp" data-delay="200">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-book-reader"></i>
+                    </div>
+                    <h3 class="feature-title">Guias Práticos</h3>
+                    <p class="feature-description">
+                        Manuais e orientações detalhadas para educadores e pais sobre como lidar com situações
+                        específicas e potencializar o desenvolvimento.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Ver guias <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature Card 3 -->
+            <div class="col-lg-4 col-md-6 animate__animated" data-animation="animate__fadeInUp" data-delay="400">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3 class="feature-title">Dúvidas Frequentes</h3>
+                    <p class="feature-description">
+                        Respostas detalhadas para as perguntas mais comuns sobre TEA, comportamentos, estratégias e
+                        direitos educacionais.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Ver dúvidas <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature Card 4 -->
+            <div class="col-lg-4 col-md-6 animate__animated" data-animation="animate__fadeInUp">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="feature-title">Comunicação Alternativa</h3>
+                    <p class="feature-description">
+                        Recursos de comunicação visual e pictórica para facilitar a interação e compreensão de rotinas e
+                        atividades diárias.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Ver recursos <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature Card 5 -->
+            <div class="col-lg-4 col-md-6 animate__animated" data-animation="animate__fadeInUp" data-delay="200">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-address-book"></i>
+                    </div>
+                    <h3 class="feature-title">Rede de Contatos</h3>
+                    <p class="feature-description">
+                        Diretório completo com profissionais especializados, clínicas, ONGs e instituições de apoio ao
+                        autismo na região.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Ver contatos <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature Card 6 -->
+            <div class="col-lg-4 col-md-6 animate__animated" data-animation="animate__fadeInUp" data-delay="400">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3 class="feature-title">Checklists e Avaliações</h3>
+                    <p class="feature-description">
+                        Ferramentas de observação e acompanhamento do desenvolvimento para identificar progressos e
+                        áreas que necessitam mais atenção.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Ver checklists <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section py-5 mt-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0 order-lg-2 animate__animated" data-animation="animate__fadeInRight">
+                <div class="section-header mb-4">
+                    <span class="section-subtitle">Nossa missão</span>
+                    <h2 class="section-title">Promovendo a inclusão e o desenvolvimento</h2>
+                    <div class="section-divider"></div>
+                </div>
+                <p>O <strong>CentroEspectro</strong> nasceu da necessidade de criar ambientes educacionais
+                    verdadeiramente inclusivos, que atendam às necessidades específicas de alunos com Transtorno do
+                    Espectro Autista.</p>
+                <p>Desenvolvido em parceria com educadores, psicólogos e especialistas em educação especial, nosso
+                    sistema reúne as melhores práticas pedagógicas e ferramentas de apoio para facilitar o trabalho de
+                    professores e o acompanhamento das famílias.</p>
+                <p>Nossa abordagem é fundamentada em evidências científicas e experiências práticas, com foco na
+                    valorização das potencialidades de cada indivíduo e no desenvolvimento de sua autonomia.</p>
+                <div class="mt-4">
+                    <a href="{% url 'sobre' %}" class="btn btn-primary">
+                        Saiba mais sobre nós
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center order-lg-1 animate__animated" data-animation="animate__fadeInLeft">
+                <div class="about-image-container">
+                    <img src="{% static 'img/placeholder-600x400.jpg' %}" alt="Professores em treinamento sobre TEA"
+                        class="about-image img-fluid">
+                    <div class="about-image-dots"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials-section py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-subtitle">Depoimentos</span>
+            <h2 class="section-title">O que dizem sobre nós</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="row testimonials-container">
+            <!-- Testimonial 1 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "As ferramentas disponibilizadas pelo CentroEspectro transformaram minha forma de ensinar.
+                        Consegui adaptar as atividades para atender às necessidades do meu aluno com autismo e vi um
+                        progresso notável em poucos meses."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">
+                            <img src="{% static 'img/avatar-placeholder-60x60.jpg' %}" alt="Avatar"
+                                class="img-fluid rounded-circle">
+                        </div>
+                        <div class="testimonial-info">
+                            <h5>Maria Silva</h5>
+                            <span>Professora - Ensino Fundamental</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonial 2 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "Como pai de uma criança autista, encontrei no CentroEspectro o suporte que precisava para
+                        entender melhor as necessidades do meu filho e como auxiliá-lo em casa, complementando o
+                        trabalho realizado na escola."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">
+                            <img src="{% static 'img/avatar-placeholder-60x60.jpg' %}" alt="Avatar"
+                                class="img-fluid rounded-circle">
+                        </div>
+                        <div class="testimonial-info">
+                            <h5>Carlos Oliveira</h5>
+                            <span>Pai de aluno</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonial 3 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "O programa de capacitação e os recursos disponíveis na plataforma ajudaram nossa escola a criar
+                        um ambiente verdadeiramente inclusivo. A diferença na confiança de nossos educadores é
+                        evidente."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">
+                            <img src="{% static 'img/avatar-placeholder-60x60.jpg' %}" alt="Avatar"
+                                class="img-fluid rounded-circle">
+                        </div>
+                        <div class="testimonial-info">
+                            <h5>Ana Santos</h5>
+                            <span>Coordenadora Pedagógica</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-wrapper">
+            <div class="row align-items-center">
+                <div class="col-lg-7 mb-4 mb-lg-0">
+                    <h2 class="cta-title">Vamos construir juntos um ambiente mais inclusivo</h2>
+                    <p class="cta-text">Acesse agora nossas ferramentas e recursos especializados para apoiar o
+                        desenvolvimento de pessoas com autismo.</p>
+                </div>
+                <div class="col-lg-5 text-lg-end text-center">
+                    <a href="{% url 'ferramentas' %}" class="btn btn-light btn-lg">Começar agora</a>
+                    <a href="{% url 'contatos' %}" class="btn btn-outline-light btn-lg ms-2">Fale conosco</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Updates -->
+<section class="updates-section py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-subtitle">Novidades</span>
+            <h2 class="section-title">Conteúdos recentes</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <div class="row">
+            <!-- Update Card 1 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="update-card">
+                    <div class="update-image">
+                        <img src="{% static 'img/placeholder-400x200.jpg' %}" alt="Imagem do artigo" class="img-fluid">
+                        <div class="update-category">Artigo</div>
+                    </div>
+                    <div class="update-content">
+                        <span class="update-date"><i class="far fa-calendar-alt"></i> 12 de abril, 2025</span>
+                        <h3 class="update-title">Estratégias de Comunicação Visual para Alunos com TEA</h3>
+                        <p class="update-excerpt">Descubra ferramentas visuais e técnicas de comunicação que podem
+                            transformar a experiência educacional...</p>
+                        <a href="#" class="update-link">Ler mais <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Card 2 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="update-card">
+                    <div class="update-image">
+                        <img src="{% static 'img/placeholder-400x200.jpg' %}" alt="Imagem do recurso" class="img-fluid">
+                        <div class="update-category">Recurso</div>
+                    </div>
+                    <div class="update-content">
+                        <span class="update-date"><i class="far fa-calendar-alt"></i> 5 de abril, 2025</span>
+                        <h3 class="update-title">Nova Coleção de Atividades Sensoriais</h3>
+                        <p class="update-excerpt">Um conjunto completo de atividades para estimulação sensorial,
+                            adequadas para diferentes perfis...</p>
+                        <a href="#" class="update-link">Acessar recurso <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Card 3 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="update-card">
+                    <div class="update-image">
+                        <img src="{% static 'img/placeholder-400x200.jpg' %}" alt="Imagem do evento" class="img-fluid">
+                        <div class="update-category">Evento</div>
+                    </div>
+                    <div class="update-content">
+                        <span class="update-date"><i class="far fa-calendar-alt"></i> 20 de abril, 2025</span>
+                        <h3 class="update-title">Workshop Online: Autismo e Tecnologia Assistiva</h3>
+                        <p class="update-excerpt">Participe do nosso workshop gratuito e conheça ferramentas digitais
+                            que auxiliam no desenvolvimento...</p>
+                        <a href="#" class="update-link">Inscrever-se <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="#" class="btn btn-outline-primary">Ver todos os conteúdos</a>
+        </div>
+    </div>
+</section>
+
+<!-- Partners -->
+<section class="partners-section py-5 bg-light">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-subtitle">Colaboradores</span>
+            <h2 class="section-title">Nossos parceiros</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        <div class="partners-slider">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="partner-logo">
+                        <img src="{% static 'img/partner-placeholder-150x60.jpg' %}" alt="Logo Parceiro 1"
+                            class="img-fluid">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="partner-logo">
+                        <img src="{% static 'img/partner-placeholder-150x60.jpg' %}" alt="Logo Parceiro 2"
+                            class="img-fluid">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="partner-logo">
+                        <img src="{% static 'img/partner-placeholder-150x60.jpg' %}" alt="Logo Parceiro 3"
+                            class="img-fluid">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="partner-logo">
+                        <img src="{% static 'img/partner-placeholder-150x60.jpg' %}" alt="Logo Parceiro 4"
+                            class="img-fluid">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="partner-logo">
+                        <img src="{% static 'img/partner-placeholder-150x60.jpg' %}" alt="Logo Parceiro 5"
+                            class="img-fluid">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="partner-logo">
+                        <img src="{% static 'img/partner-placeholder-150x60.jpg' %}" alt="Logo Parceiro 6"
+                            class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter -->
+<section class="newsletter-section py-5">
+    <div class="container">
+        <div class="newsletter-wrapper">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h3 class="newsletter-title">Fique por dentro das novidades</h3>
+                    <p class="newsletter-text">Cadastre-se para receber atualizações, novos recursos e informações sobre
+                        eventos relacionados ao TEA.</p>
+                </div>
+                <div class="col-lg-6">
+                    <form class="newsletter-form" method="post" action="{% url 'newsletter_signup' %}">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="email" name="email" class="form-control" placeholder="Seu melhor e-mail"
+                                aria-label="Seu melhor e-mail" required>
+                            <button class="btn btn-primary" type="submit">Inscrever-se</button>
+                        </div>
+                        <div class="form-text text-white mt-2">
+                            <i class="fas fa-lock me-1"></i> Seus dados estão seguros e não compartilhamos com
+                            terceiros.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

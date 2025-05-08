@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dúvidas Frequentes sobre Autismo{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" style="padding: 4rem 0;">
+    <div class="hero-overlay"></div>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-12 text-center">
+                <h1 class="display-4 fw-bold mb-4 animate__animated animate__fadeInUp">Dúvidas Frequentes</h1>
+                <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">
+                    Aqui você encontra respostas para as perguntas mais comuns sobre o Transtorno do Espectro Autista
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <div class="section-subtitle">Encontre respostas</div>
+                <h2 class="section-title">O que você precisa saber sobre o autismo</h2>
+                <div class="section-divider"></div>
+                <p class="section-description mb-5">
+                    Explore nossas respostas para as dúvidas mais frequentes sobre o Transtorno do Espectro Autista. Se
+                    você não encontrar o que procura, entre em contato conosco.
+                </p>
+
+                <!-- Search Form -->
+                <div class="row justify-content-center mb-5">
+                    <div class="col-md-8">
+                        <form action="{% url 'pesquisar_faqs' %}" method="post" class="d-flex">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                <input type="text" name="termo" class="form-control"
+                                    placeholder="O que você quer saber?" value="{{ termo_pesquisa }}"
+                                    aria-label="Termo de pesquisa">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search me-2"></i> Pesquisar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if faqs_por_categoria %}
+        <!-- FAQ Categories Nav -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav class="faq-nav d-flex justify-content-center flex-wrap">
+                    {% for categoria in faqs_por_categoria.keys %}
+                    <a href="#{{ categoria|lower|slugify }}" class="btn btn-sm btn-outline-primary m-1">
+                        {{ categoria }}
+                    </a>
+                    {% endfor %}
+                </nav>
+            </div>
+        </div>
+
+        <!-- FAQ Accordion -->
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                {% for categoria, faqs in faqs_por_categoria.items %}
+                <div class="mb-5" id="{{ categoria|lower|slugify }}">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="feature-icon me-3">
+                            {% if categoria == "Geral" %}
+                            <i class="fas fa-info-circle"></i>
+                            {% elif categoria == "Diagnóstico" %}
+                            <i class="fas fa-stethoscope"></i>
+                            {% elif categoria == "Tratamento" %}
+                            <i class="fas fa-heartbeat"></i>
+                            {% elif categoria == "Apoio" %}
+                            <i class="fas fa-hands-helping"></i>
+                            {% elif categoria == "Conceitos" %}
+                            <i class="fas fa-book"></i>
+                            {% else %}
+                            <i class="fas fa-question-circle"></i>
+                            {% endif %}
+                        </div>
+                        <h3 class="feature-title mb-0">{{ categoria }}</h3>
+                    </div>
+
+                    <div class="accordion shadow-sm" id="accordion{{ categoria|slugify }}">
+                        {% for faq in faqs %}
+                        <div class="accordion-item border-0 mb-3 rounded-3 overflow-hidden">
+                            <h2 class="accordion-header" id="heading{{ faq.id }}">
+                                <button class="accordion-button collapsed fw-medium" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#collapse{{ faq.id }}"
+                                    aria-expanded="false" aria-controls="collapse{{ faq.id }}">
+                                    {{ faq.pergunta }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ faq.id }}" class="accordion-collapse collapse"
+                                aria-labelledby="heading{{ faq.id }}"
+                                data-bs-parent="#accordion{{ categoria|slugify }}">
+                                <div class="accordion-body">
+                                    <p>{{ faq.resposta|linebreaksbr|safe }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="alert alert-info p-4 shadow-sm rounded-3">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h4>Nenhuma informação encontrada</h4>
+                    <p class="mb-0">
+                        {% if termo_pesquisa %}
+                        <span>Não encontramos resultados para "{{ termo_pesquisa }}". </span>
+                        {% endif %}
+                        Tente usar termos diferentes ou entre em contato conosco para mais informações.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Call to Action -->
+        <div class="row mt-5">
+            <div class="col-lg-10 mx-auto">
+                <div class="card border-0 shadow-sm"
+                    style="background: linear-gradient(45deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 16px;">
+                    <div class="card-body p-5 text-white">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h3 class="mb-3">Ainda tem dúvidas?</h3>
+                                <p class="mb-lg-0">
+                                    Se você não encontrou a resposta que procura, entre em contato com nossa equipe.
+                                    Estamos aqui para ajudar.
+                                </p>
+                            </div>
+                            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                                <a href="{% url 'contatos' %}" class="btn btn-light btn-lg">
+                                    <i class="fas fa-envelope me-2"></i> Fale Conosco
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resources Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <div class="section-subtitle">Conheça mais</div>
+                <h2 class="section-title">Recursos úteis</h2>
+                <div class="section-divider"></div>
+                <p class="section-description">
+                    Explore nossos materiais e ferramentas para aprender mais sobre o autismo
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm feature-card">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-book-reader"></i>
+                        </div>
+                        <h4 class="feature-title">Materiais educativos</h4>
+                        <p class="feature-description">
+                            Artigos, guias e publicações sobre autismo e desenvolvimento infantil
+                        </p>
+                        <a href="#" class="feature-link">
+                            Explorar materiais <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm feature-card">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <h4 class="feature-title">Ferramentas interativas</h4>
+                        <p class="feature-description">
+                            Aplicativos, jogos e atividades desenvolvidos para crianças no espectro
+                        </p>
+                        <a href="{% url 'ferramentas' %}" class="feature-link">
+                            Ver ferramentas <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm feature-card">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4 class="feature-title">Comunidade</h4>
+                        <p class="feature-description">
+                            Grupos de apoio e fóruns para pais, cuidadores e pessoas autistas
+                        </p>
+                        <a href="#" class="feature-link">
+                            Participar <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Scroll suave para categorias
+    document.querySelectorAll('.faq-nav a').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Adicionar animação aos acordeões
+    const accordionButtons = document.querySelectorAll('.accordion-button');
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            // Pequena pausa para permitir que o bootstrap faça a transição
+            setTimeout(() => {
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                if (isExpanded) {
+                    const collapseElement = this.parentElement.nextElementSibling;
+                    collapseElement.querySelector('.accordion-body').classList.add('animate__animated', 'animate__fadeIn');
+                }
+            }, 300);
+        });
+    });
+
+    // Destacar termos pesquisados
+    function highlightText() {
+        const searchTerm = '{{ termo_pesquisa }}';
+        if (searchTerm && searchTerm.length > 2) {
+            const accordionItems = document.querySelectorAll('.accordion-body');
+            accordionItems.forEach(item => {
+                const content = item.innerHTML;
+                const highlightedContent = content.replace(
+                    new RegExp(searchTerm, 'gi'),
+                    match => `<mark class="bg-warning">${match}</mark>`
+                );
+                item.innerHTML = highlightedContent;
+            });
+
+            const accordionButtons = document.querySelectorAll('.accordion-button');
+            accordionButtons.forEach(button => {
+                const content = button.innerHTML;
+                const highlightedContent = content.replace(
+                    new RegExp(searchTerm, 'gi'),
+                    match => `<mark class="bg-warning">${match}</mark>`
+                );
+                button.innerHTML = highlightedContent;
+            });
+        }
+    }
+
+    // Executar após a página carregar
+    document.addEventListener('DOMContentLoaded', function () {
+        highlightText();
+    });
+</script>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Estilos específicos para a página de FAQs */
+    .accordion-button {
+        background-color: #fff;
+        border: none;
+        font-weight: 500;
+        padding: 1.2rem 1.5rem;
+        color: var(--gray-800);
+        box-shadow: none;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: var(--primary);
+        color: white;
+        box-shadow: none;
+    }
+
+    .accordion-button:not(.collapsed)::after {
+        filter: brightness(0) invert(1);
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: transparent;
+    }
+
+    .accordion-body {
+        padding: 1.5rem;
+        background-color: #fff;
+        color: var(--gray-700);
+        line-height: 1.8;
+    }
+
+    .faq-nav .btn {
+        border-radius: 30px;
+        margin: 0 4px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1.2rem;
+    }
+
+    .faq-nav .btn:hover {
+        transform: translateY(-3px);
+    }
+
+    mark {
+        padding: 0.1em 0.2em;
+        border-radius: 3px;
+    }
+
+    /* Ícones para categorias */
+    .feature-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        color: var(--primary);
+        background-color: rgba(106, 62, 161, 0.1);
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    /* Ajustes para dispositivos móveis */
+    @media (max-width: 768px) {
+        .accordion-button {
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .accordion-body {
+            padding: 1rem;
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
