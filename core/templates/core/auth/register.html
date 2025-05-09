@@ -1,0 +1,637 @@
+<!-- core/templates/core/auth/register.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card shadow-lg border-0 overflow-hidden card-register">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <!-- Lado esquerdo decorativo com ilustração e formas -->
+                        <div class="col-lg-6 position-relative d-none d-lg-block">
+                            <div class="h-100 register-left-panel">
+                                <!-- Padrão de formas geométricas -->
+                                <div class="position-absolute geometric-patterns">
+                                    <div class="circle-shape circle-shape-1"></div>
+                                    <div class="circle-shape circle-shape-2"></div>
+                                    <div class="square-shape"></div>
+                                </div>
+
+                                <!-- Conteúdo do lado esquerdo -->
+                                <div
+                                    class="d-flex flex-column justify-content-center h-100 position-relative z-index-1 p-5 text-center text-white">
+                                    <div class="mb-5">
+                                        <div class="display-4 fw-bold mb-4 welcome-text">Junte-se a nós!</div>
+                                        <p class="lead opacity-75">Estamos felizes em receber você</p>
+                                    </div>
+
+                                    <!-- Ilustração simplificada de cadastro -->
+                                    <div class="mb-5">
+                                        <div class="position-relative mx-auto user-avatar-container">
+                                            <!-- Círculo de fundo -->
+                                            <div
+                                                class="position-absolute top-0 start-0 end-0 bottom-0 rounded-circle avatar-background">
+                                            </div>
+
+                                            <!-- Ícone de usuário estilizado -->
+                                            <div class="position-absolute top-50 start-50 translate-middle">
+                                                <div
+                                                    class="rounded-circle bg-white d-flex align-items-center justify-content-center user-icon">
+                                                    <i class="fas fa-user-plus fa-3x text-primary"></i>
+                                                </div>
+
+                                                <!-- Animação de pulso -->
+                                                <div
+                                                    class="position-absolute top-50 start-50 translate-middle rounded-circle pulse-animation">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <p class="mb-0 fst-italic">"Uma nova conta, infinitas possibilidades"</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lado direito com formulário -->
+                        <div class="col-lg-6">
+                            <div class="p-4 p-lg-5">
+                                <!-- Header para mobile -->
+                                <div class="d-lg-none text-center mb-5">
+                                    <div class="d-inline-block p-4 rounded-circle mobile-icon-container">
+                                        <i class="fas fa-user-plus fa-3x text-white"></i>
+                                    </div>
+                                    <h3 class="mt-4 fw-bold">Criar Conta</h3>
+                                    <p class="text-muted">Preencha seu cadastro para começar</p>
+                                </div>
+
+                                <!-- Header para Desktop -->
+                                <div class="d-none d-lg-block">
+                                    <h3 class="fw-bold mb-1">Criar sua conta</h3>
+                                    <p class="text-muted mb-4">Preencha seus dados para se registrar</p>
+                                </div>
+
+                                {% if messages %}
+                                <div class="mb-4 animate-fade-up">
+                                    {% for message in messages %}
+                                    <div
+                                        class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} d-flex align-items-center border-0 shadow-sm alert-custom {% if message.tags == 'error' %}alert-bg-error{% elif message.tags == 'success' %}alert-bg-success{% else %}alert-bg-default{% endif %}">
+                                        <i
+                                            class="{% if message.tags == 'error' %}fas fa-exclamation-circle text-danger{% elif message.tags == 'success' %}fas fa-check-circle text-success{% else %}fas fa-info-circle text-info{% endif %} fa-lg me-3"></i>
+                                        <div>{{ message }}</div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <form method="post" novalidate class="animate-fade-up">
+                                    {% csrf_token %}
+
+                                    <div class="row mb-3">
+                                        <div class="col-lg-6 mb-3 mb-lg-0">
+                                            <label for="{{ form.first_name.id_for_label }}"
+                                                class="form-label fw-medium mb-2">
+                                                Nome
+                                            </label>
+                                            <div class="input-group input-group-custom">
+                                                <span class="input-group-text border-0 bg-white ps-3">
+                                                    <i class="fas fa-user text-primary"></i>
+                                                </span>
+                                                {{ form.first_name }}
+                                            </div>
+                                            {% if form.first_name.errors %}
+                                            <div class="text-danger mt-2 ps-1">
+                                                {% for error in form.first_name.errors %}
+                                                <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-lg-6">
+                                            <label for="{{ form.last_name.id_for_label }}"
+                                                class="form-label fw-medium mb-2">
+                                                Sobrenome
+                                            </label>
+                                            <div class="input-group input-group-custom">
+                                                <span class="input-group-text border-0 bg-white ps-3">
+                                                    <i class="fas fa-user-tag text-primary"></i>
+                                                </span>
+                                                {{ form.last_name }}
+                                            </div>
+                                            {% if form.last_name.errors %}
+                                            <div class="text-danger mt-2 ps-1">
+                                                {% for error in form.last_name.errors %}
+                                                <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.username.id_for_label }}" class="form-label fw-medium mb-2">
+                                            Nome de usuário
+                                        </label>
+                                        <div class="input-group input-group-custom">
+                                            <span class="input-group-text border-0 bg-white ps-3">
+                                                <i class="fas fa-at text-primary"></i>
+                                            </span>
+                                            {{ form.username }}
+                                        </div>
+                                        {% if form.username.errors %}
+                                        <div class="text-danger mt-2 ps-1">
+                                            {% for error in form.username.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.email.id_for_label }}" class="form-label fw-medium mb-2">
+                                            Email
+                                        </label>
+                                        <div class="input-group input-group-custom">
+                                            <span class="input-group-text border-0 bg-white ps-3">
+                                                <i class="fas fa-envelope text-primary"></i>
+                                            </span>
+                                            {{ form.email }}
+                                        </div>
+                                        {% if form.email.errors %}
+                                        <div class="text-danger mt-2 ps-1">
+                                            {% for error in form.email.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.password1.id_for_label }}"
+                                            class="form-label fw-medium mb-2">
+                                            Senha
+                                        </label>
+                                        <div class="input-group input-group-custom">
+                                            <span class="input-group-text border-0 bg-white ps-3">
+                                                <i class="fas fa-lock text-primary"></i>
+                                            </span>
+                                            {{ form.password1 }}
+                                            <button class="btn border-0 bg-white" type="button" id="togglePassword1">
+                                                <i class="fas fa-eye text-muted"></i>
+                                            </button>
+                                        </div>
+                                        <div id="passwordStrength" class="mt-2 d-none">
+                                            <div class="progress" style="height: 5px;">
+                                                <div id="passwordStrengthBar" class="progress-bar" role="progressbar"
+                                                    style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
+                                                    aria-valuemax="100"></div>
+                                            </div>
+                                            <small id="passwordStrengthText" class="form-text mt-1">Força da
+                                                senha</small>
+                                        </div>
+                                        {% if form.password1.errors %}
+                                        <div class="text-danger mt-2 ps-1">
+                                            {% for error in form.password1.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <div class="mt-2">
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>Sua senha deve conter pelo menos
+                                                8 caracteres e não pode ser muito comum.
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.password2.id_for_label }}"
+                                            class="form-label fw-medium mb-2">
+                                            Confirmar senha
+                                        </label>
+                                        <div class="input-group input-group-custom">
+                                            <span class="input-group-text border-0 bg-white ps-3">
+                                                <i class="fas fa-lock text-primary"></i>
+                                            </span>
+                                            {{ form.password2 }}
+                                            <button class="btn border-0 bg-white" type="button" id="togglePassword2">
+                                                <i class="fas fa-eye text-muted"></i>
+                                            </button>
+                                        </div>
+                                        <div id="passwordMatch" class="mt-2 d-none">
+                                            <small class="form-text"><i
+                                                    class="fas fa-check-circle me-1 text-success"></i>As senhas
+                                                coincidem</small>
+                                        </div>
+                                        <div id="passwordMismatch" class="mt-2 d-none">
+                                            <small class="form-text text-danger"><i
+                                                    class="fas fa-times-circle me-1"></i>As senhas não coincidem</small>
+                                        </div>
+                                        {% if form.password2.errors %}
+                                        <div class="text-danger mt-2 ps-1">
+                                            {% for error in form.password2.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-check mb-4 mt-4">
+                                        <input class="form-check-input checkbox-custom" type="checkbox" id="termsAgree"
+                                            required>
+                                        <label class="form-check-label ms-1" for="termsAgree">
+                                            Concordo com os <a href="#" class="text-primary">Termos de Serviço</a> e <a
+                                                href="#" class="text-primary">Política de Privacidade</a>
+                                        </label>
+                                    </div>
+
+                                    <div class="d-grid mt-4 mb-4">
+                                        <button type="submit" class="btn btn-primary btn-lg btn-register"
+                                            id="registerButton" disabled>
+                                            <span class="d-flex align-items-center justify-content-center">
+                                                <span>Criar conta</span>
+                                                <i class="fas fa-user-plus ms-2"></i>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="text-center mt-2">
+                                    <!-- Separador -->
+                                    <div class="d-flex align-items-center my-4">
+                                        <div class="flex-grow-1 border-bottom"></div>
+                                        <div class="px-3 text-muted">ou cadastre-se com</div>
+                                        <div class="flex-grow-1 border-bottom"></div>
+                                    </div>
+
+                                    <!-- Botões de registro social -->
+                                    <div class="d-flex justify-content-center gap-3 mb-4">
+                                        <a href="#" class="btn btn-light social-btn">
+                                            <i class="fab fa-google text-danger"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-light social-btn">
+                                            <i class="fab fa-facebook-f text-primary"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-light social-btn">
+                                            <i class="fab fa-apple" style="color: #000;"></i>
+                                        </a>
+                                    </div>
+
+                                    <p class="mb-0">
+                                        Já tem uma conta?
+                                        <a href="{% url 'login' %}" class="text-primary fw-bold transition">
+                                            Faça login
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos gerais */
+    .card-register {
+        border-radius: 20px;
+        background: linear-gradient(145deg, #ffffff, #f3effa);
+    }
+
+    .welcome-text {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Animações */
+    .animate-fade-up {
+        animation: fadeUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Estilos do painel esquerdo */
+    .register-left-panel {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 65%);
+    }
+
+    .geometric-patterns {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0.1;
+        overflow: hidden;
+    }
+
+    .circle-shape {
+        position: absolute;
+        border-radius: 50%;
+    }
+
+    .circle-shape-1 {
+        width: 300px;
+        height: 300px;
+        background: var(--primary-light);
+        top: -100px;
+        right: -100px;
+    }
+
+    .circle-shape-2 {
+        width: 200px;
+        height: 200px;
+        background: var(--accent);
+        bottom: -50px;
+        left: -50px;
+        opacity: 0.5;
+    }
+
+    .square-shape {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        border-radius: 20px;
+        background: var(--secondary);
+        transform: rotate(45deg);
+        top: 50%;
+        left: 20%;
+    }
+
+    /* Avatar e animação */
+    .user-avatar-container {
+        width: 180px;
+        height: 180px;
+    }
+
+    .avatar-background {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .user-icon {
+        width: 80px;
+        height: 80px;
+    }
+
+    .pulse-animation {
+        width: 100px;
+        height: 100px;
+        border: 2px solid white;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    /* Estilos para mobile */
+    .mobile-icon-container {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 65%);
+    }
+
+    /* Estilos de alertas */
+    .alert-custom {
+        border-radius: 12px;
+    }
+
+    .alert-bg-error {
+        background-color: rgba(244, 67, 54, 0.1);
+    }
+
+    .alert-bg-success {
+        background-color: rgba(76, 175, 80, 0.1);
+    }
+
+    .alert-bg-default {
+        background-color: rgba(33, 150, 243, 0.1);
+    }
+
+    /* Estilos de formulário */
+    .input-group-custom {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .checkbox-custom {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Botão de registro */
+    .btn-register {
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 5px 15px rgba(106, 62, 161, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-register:not([disabled]):hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(106, 62, 161, 0.4);
+    }
+
+    .btn-register:not([disabled]):active {
+        transform: scale(0.98);
+    }
+
+    .btn-register[disabled] {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+
+    /* Botões sociais */
+    .social-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .social-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Transições */
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    .transition:hover {
+        color: var(--primary-dark);
+        letter-spacing: 0.5px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Adicionar classes e atributos aos inputs
+        const firstNameInput = document.getElementById('{{ form.first_name.id_for_label }}');
+        const lastNameInput = document.getElementById('{{ form.last_name.id_for_label }}');
+        const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
+        const emailInput = document.getElementById('{{ form.email.id_for_label }}');
+        const password1Input = document.getElementById('{{ form.password1.id_for_label }}');
+        const password2Input = document.getElementById('{{ form.password2.id_for_label }}');
+        const termsAgree = document.getElementById('termsAgree');
+        const registerButton = document.getElementById('registerButton');
+
+        // Array de inputs para aplicar estilos básicos
+        const allInputs = [firstNameInput, lastNameInput, usernameInput, emailInput, password1Input, password2Input];
+
+        // Aplicar estilos a todos os inputs
+        allInputs.forEach(input => {
+            if (input) {
+                input.classList.add('form-control', 'border-0', 'py-3');
+                input.style.backgroundColor = 'white';
+                input.style.fontSize = '16px';
+            }
+        });
+
+        // Adicionar placeholders específicos
+        if (firstNameInput) firstNameInput.setAttribute('placeholder', 'Seu nome');
+        if (lastNameInput) lastNameInput.setAttribute('placeholder', 'Seu sobrenome');
+        if (usernameInput) usernameInput.setAttribute('placeholder', 'Escolha um nome de usuário');
+        if (emailInput) emailInput.setAttribute('placeholder', 'Seu endereço de email');
+        if (password1Input) password1Input.setAttribute('placeholder', 'Crie uma senha forte');
+        if (password2Input) password2Input.setAttribute('placeholder', 'Confirme sua senha');
+
+        // Toggle para mostrar/esconder senha
+        function setupTogglePassword(toggleId, passwordInput) {
+            const toggleButton = document.getElementById(toggleId);
+            if (toggleButton && passwordInput) {
+                toggleButton.addEventListener('click', function () {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
+                });
+            }
+        }
+
+        setupTogglePassword('togglePassword1', password1Input);
+        setupTogglePassword('togglePassword2', password2Input);
+
+        // Verificador de força de senha
+        if (password1Input) {
+            const passwordStrength = document.getElementById('passwordStrength');
+            const passwordStrengthBar = document.getElementById('passwordStrengthBar');
+            const passwordStrengthText = document.getElementById('passwordStrengthText');
+
+            password1Input.addEventListener('input', function () {
+                const password = this.value;
+
+                if (password.length === 0) {
+                    passwordStrength.classList.add('d-none');
+                    return;
+                }
+
+                passwordStrength.classList.remove('d-none');
+
+                // Calcular pontuação de força da senha
+                let score = 0;
+
+                // Comprimento básico
+                if (password.length >= 8) score += 20;
+                if (password.length >= 12) score += 10;
+
+                // Complexidade
+                if (/[a-z]/.test(password)) score += 10; // letras minúsculas
+                if (/[A-Z]/.test(password)) score += 20; // letras maiúsculas
+                if (/[0-9]/.test(password)) score += 20; // números
+                if (/[^a-zA-Z0-9]/.test(password)) score += 20; // caracteres especiais
+
+                // Limitar score a 100
+                score = Math.min(score, 100);
+
+                // Atualizar barra de progresso
+                passwordStrengthBar.style.width = score + '%';
+
+                // Definir cor da barra baseada na força
+                if (score < 30) {
+                    passwordStrengthBar.className = 'progress-bar bg-danger';
+                    passwordStrengthText.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Senha fraca';
+                    passwordStrengthText.className = 'form-text text-danger mt-1';
+                } else if (score < 70) {
+                    passwordStrengthBar.className = 'progress-bar bg-warning';
+                    passwordStrengthText.innerHTML = '<i class="fas fa-info-circle me-1"></i>Senha média';
+                    passwordStrengthText.className = 'form-text text-warning mt-1';
+                } else {
+                    passwordStrengthBar.className = 'progress-bar bg-success';
+                    passwordStrengthText.innerHTML = '<i class="fas fa-check-circle me-1"></i>Senha forte';
+                    passwordStrengthText.className = 'form-text text-success mt-1';
+                }
+            });
+        }
+
+        // Verificação de coincidência de senhas
+        if (password1Input && password2Input) {
+            const passwordMatch = document.getElementById('passwordMatch');
+            const passwordMismatch = document.getElementById('passwordMismatch');
+
+            function checkPasswordsMatch() {
+                const password1 = password1Input.value;
+                const password2 = password2Input.value;
+
+                if (password2.length === 0) {
+                    passwordMatch.classList.add('d-none');
+                    passwordMismatch.classList.add('d-none');
+                    return;
+                }
+
+                if (password1 === password2) {
+                    passwordMatch.classList.remove('d-none');
+                    passwordMismatch.classList.add('d-none');
+                } else {
+                    passwordMatch.classList.add('d-none');
+                    passwordMismatch.classList.remove('d-none');
+                }
+            }
+
+            password1Input.addEventListener('input', checkPasswordsMatch);
+            password2Input.addEventListener('input', checkPasswordsMatch);
+        }
+
+        // Ativar/desativar botão de registro com base nos termos
+        if (termsAgree && registerButton) {
+            termsAgree.addEventListener('change', function () {
+                registerButton.disabled = !this.checked;
+            });
+        }
+
+        // Adicionar tooltip aos campos (se Bootstrap tooltip estiver disponível)
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    });
+</script>
+{% endblock %}

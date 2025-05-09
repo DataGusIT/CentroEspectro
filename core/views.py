@@ -1,7 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 from django.http import HttpResponse
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm
 from django.db.models import Q
-from .models import FAQ, Categoria, Contato, Ferramenta, TipoFerramenta
+from .models import FAQ, Categoria, Contato, Ferramenta, TipoFerramenta, CustomUser, UserDownload
 from collections import defaultdict
 
 def index(request):
@@ -120,3 +124,237 @@ def sobre(request):
 
 def privacy(request):
     return render(request, 'core/privacy.html', {'title': 'Privacy Policy'})
+
+# Função auxiliar para verificar se o usuário é admin
+def is_admin(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+def register_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, 'Cadastro realizado com sucesso!')
+            return redirect('index')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = CustomUserCreationForm()
+    
+    return render(request, 'core/auth/register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Bem-vindo, {user.first_name}!')
+                
+                # Verificar se o usuário é administrador usando os atributos padrão do Django
+                if user.is_staff or user.is_superuser:
+                    return redirect('admin_dashboard')
+                
+                # Se não for admin, redireciona para a página solicitada ou para a página inicial
+                next_url = request.GET.get('next', 'index')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Nome de usuário ou senha inválidos.')
+        else:
+            messages.error(request, 'Nome de usuário ou senha inválidos.')
+    else:
+        form = CustomAuthenticationForm()
+    
+    return render(request, 'core/auth/login.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Você saiu com sucesso!')
+    return redirect('index')
+
+@login_required
+def profile_view(request):
+    user = request.user
+    downloads = UserDownload.objects.filter(user=user)
+    
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Perfil atualizado com sucesso!')
+            return redirect('profile')
+    else:
+        form = UserProfileForm(instance=user)
+    
+    return render(request, 'core/auth/profile.html', {
+        'form': form,
+        'downloads': downloads,
+        'title': 'Meu Perfil'
+    })
+
+# Rota para registrar downloads
+@login_required
+def register_download(request, ferramenta_id):
+    if request.method == 'POST':
+        ferramenta = get_object_or_404(Ferramenta, id=ferramenta_id)
+        # Criar o registro de download
+        download = UserDownload(user=request.user, ferramenta=ferramenta)
+        download.save()
+        messages.success(request, f'Download de {ferramenta.nome} registrado!')
+        return redirect('detalhes_ferramenta', id=ferramenta_id)
+    
+    return redirect('ferramentas')
+
+# Views para gestão de recursos (apenas para admins)
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    categorias = Categoria.objects.all().count()
+    ferramentas = Ferramenta.objects.all().count()
+    contatos = Contato.objects.all().count()
+    faqs = FAQ.objects.all().count()
+    usuarios = CustomUser.objects.all().count()
+    
+    context = {
+        'title': 'Dashboard Admin',
+        'categorias': categorias,
+        'ferramentas': ferramentas,
+        'contatos': contatos,
+        'faqs': faqs,
+        'usuarios': usuarios
+    }
+    
+    return render(request, 'core/admin/dashboard.html', context)
+
+# CRUD para Categorias
+@user_passes_test(is_admin)
+def admin_categorias(request):
+    categorias = Categoria.objects.all()
+    return render(request, 'core/admin/categorias.html', {
+        'categorias': categorias,
+        'title': 'Gestão de Categorias'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_criar(request):
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        icone = request.POST.get('icone')
+        
+        categoria = Categoria(nome=nome, icone=icone)
+        categoria.save()
+        
+        messages.success(request, 'Categoria criada com sucesso!')
+        return redirect('admin_categorias')
+    
+    return render(request, 'core/admin/categoria_form.html', {
+        'title': 'Nova Categoria'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_editar(request, id):
+    categoria = get_object_or_404(Categoria, id=id)
+    
+    if request.method == 'POST':
+        categoria.nome = request.POST.get('nome')
+        categoria.icone = request.POST.get('icone')
+        categoria.save()
+        
+        messages.success(request, 'Categoria atualizada com sucesso!')
+        return redirect('admin_categorias')
+    
+    return render(request, 'core/admin/categoria_form.html', {
+        'categoria': categoria,
+        'title': 'Editar Categoria'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_excluir(request, id):
+    categoria = get_object_or_404(Categoria, id=id)
+    
+    if request.method == 'POST':
+        categoria.delete()
+        messages.success(request, 'Categoria excluída com sucesso!')
+        return redirect('admin_categorias')
+    
+    return render(request, 'core/admin/confirmacao_exclusao.html', {
+        'objeto': categoria,
+        'tipo': 'Categoria',
+        'title': 'Excluir Categoria'
+    })
+
+# CRUD para FAQ
+@user_passes_test(is_admin)
+def admin_faqs(request):
+    faqs = FAQ.objects.all()
+    return render(request, 'core/admin/faqs.html', {
+        'faqs': faqs,
+        'title': 'Gestão de FAQs'
+    })
+
+@user_passes_test(is_admin)
+def admin_faq_criar(request):
+    categorias = Categoria.objects.all()
+    
+    if request.method == 'POST':
+        pergunta = request.POST.get('pergunta')
+        resposta = request.POST.get('resposta')
+        categoria_id = request.POST.get('categoria')
+        categoria = get_object_or_404(Categoria, id=categoria_id)
+        
+        faq = FAQ(pergunta=pergunta, resposta=resposta, categoria=categoria)
+        faq.save()
+        
+        messages.success(request, 'FAQ criada com sucesso!')
+        return redirect('admin_faqs')
+    
+    return render(request, 'core/admin/faq_form.html', {
+        'categorias': categorias,
+        'title': 'Nova FAQ'
+    })
+
+@user_passes_test(is_admin)
+def admin_faq_editar(request, id):
+    faq = get_object_or_404(FAQ, id=id)
+    categorias = Categoria.objects.all()
+    
+    if request.method == 'POST':
+        faq.pergunta = request.POST.get('pergunta')
+        faq.resposta = request.POST.get('resposta')
+        categoria_id = request.POST.get('categoria')
+        faq.categoria = get_object_or_404(Categoria, id=categoria_id)
+        faq.save()
+        
+        messages.success(request, 'FAQ atualizada com sucesso!')
+        return redirect('admin_faqs')
+    
+    return render(request, 'core/admin/faq_form.html', {
+        'faq': faq,
+        'categorias': categorias,
+        'title': 'Editar FAQ'
+    })
+
+@user_passes_test(is_admin)
+def admin_faq_excluir(request, id):
+    faq = get_object_or_404(FAQ, id=id)
+    
+    if request.method == 'POST':
+        faq.delete()
+        messages.success(request, 'FAQ excluída com sucesso!')
+        return redirect('admin_faqs')
+    
+    return render(request, 'core/admin/confirmacao_exclusao.html', {
+        'objeto': faq,
+        'tipo': 'FAQ',
+        'title': 'Excluir FAQ'
+    })
+
+def document_list(request):
+    # Lógica para listar documentos
+    # Pode ser adaptada conforme seus modelos atuais
+    return render(request, 'core/document_list.html', {'documents': []})

@@ -1,0 +1,178 @@
+<!-- core/templates/core/auth/profile.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Informações do Perfil -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">Meu Perfil</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar mb-3">
+                            <i class="fas fa-user-circle fa-5x text-primary"></i>
+                        </div>
+                        <h5>{{ user.get_full_name }}</h5>
+                        <p class="text-muted mb-0">@{{ user.username }}</p>
+                    </div>
+
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}"
+                            role="alert">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">Nome</label>
+                            {{ form.first_name }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Sobrenome</label>
+                            {{ form.last_name }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                            {{ form.email }}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Atualizar Perfil</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico de Downloads -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">Meu Histórico de Downloads</h4>
+                </div>
+                <div class="card-body">
+                    {% if downloads %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Arquivo</th>
+                                    <th>Data</th>
+                                    <th>Tamanho</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for download in downloads %}
+                                <tr>
+                                    <td>{{ download.file_name }}</td>
+                                    <td>{{ download.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ download.file_size|filesizeformat }}</td>
+                                    <td>
+                                        <a href="{% url 'download_file' download.id %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download"></i> Baixar novamente
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginação -->
+                    {% if downloads.has_other_pages %}
+                    <nav aria-label="Paginação de downloads">
+                        <ul class="pagination justify-content-center">
+                            {% if downloads.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ downloads.previous_page_number }}">Anterior</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Anterior</span>
+                            </li>
+                            {% endif %}
+
+                            {% for i in downloads.paginator.page_range %}
+                            {% if downloads.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if downloads.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ downloads.next_page_number }}">Próximo</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Próximo</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-download fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum download encontrado</h5>
+                        <p>Você ainda não fez nenhum download de arquivos.</p>
+                        <a href="{% url 'document_list' %}" class="btn btn-primary">Explorar Documentos</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dados de Uso -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">Estatísticas de Uso</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="fas fa-file-download fa-2x text-primary mb-2"></i>
+                                <h5>{{ total_downloads }}</h5>
+                                <p class="text-muted mb-0">Downloads Totais</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                <h5>{{ last_download|default:"Nenhum" }}</h5>
+                                <p class="text-muted mb-0">Último Download</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="fas fa-hdd fa-2x text-primary mb-2"></i>
+                                <h5>{{ total_size|filesizeformat }}</h5>
+                                <p class="text-muted mb-0">Espaço Utilizado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

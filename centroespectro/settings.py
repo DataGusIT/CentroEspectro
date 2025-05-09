@@ -16,6 +16,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# AUTH_USER_MODEL = 'core.CustomUser'
+
+# Configurações de autenticação
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'index'
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -56,6 +63,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'centroespectro.wsgi.application'
+
+
 
 # Database
 DATABASES = {

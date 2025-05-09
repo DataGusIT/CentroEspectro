@@ -1,0 +1,49 @@
+{% extends "core/admin/admin_base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0">Confirmar Exclusão</h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h4>Atenção!</h4>
+                        <p>Você está prestes a excluir o seguinte item:</p>
+                        <h5 class="mt-3">{{ tipo }}: <strong>{{ objeto }}</strong></h5>
+                        <p class="mt-3">Esta ação não pode ser desfeita!</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-center gap-3">
+                            {% if tipo == 'Categoria' %}
+                            <a href="{% url 'admin_categorias' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            {% elif tipo == 'FAQ' %}
+                            <a href="{% url 'admin_faqs' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            {% else %}
+                            <a href="javascript:history.back()" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            {% endif %}
+
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-trash-alt me-1"></i> Sim, Excluir
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

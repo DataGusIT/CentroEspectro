@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Categoria, FAQ, Contato, Ferramenta, TipoFerramenta
+from django.contrib.auth.admin import UserAdmin
+from .models import Categoria, FAQ, Contato, Ferramenta, TipoFerramenta, CustomUser, UserDownload
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
@@ -28,3 +29,16 @@ class FerramentaAdmin(admin.ModelAdmin):
     list_display = ('nome', 'tipo', 'categoria', 'eh_gratuita', 'classificacao')
     list_filter = ('categoria', 'tipo', 'eh_gratuita')
     search_fields = ('nome', 'descricao')
+
+@admin.register(CustomUser)
+class CustomUserAdmin(UserAdmin):
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'is_admin')
+    fieldsets = UserAdmin.fieldsets + (
+        ('Permissões Adicionais', {'fields': ('is_admin',)}),
+    )
+    list_filter = UserAdmin.list_filter + ('is_admin',)
+
+@admin.register(UserDownload)
+class UserDownloadAdmin(admin.ModelAdmin):
+    list_display = ('user', 'ferramenta', 'data_download')
+    list_filter = ('user', 'ferramenta')

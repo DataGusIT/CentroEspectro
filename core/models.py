@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User  # Use o modelo padrão
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
@@ -82,3 +83,24 @@ class Ferramenta(models.Model):
     
     def __str__(self):
         return self.nome
+
+class CustomUser(User):
+    # Campos adicionais
+    is_admin = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = 'Usuário'
+        verbose_name_plural = 'Usuários'
+
+class UserDownload(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='downloads')
+    ferramenta = models.ForeignKey('Ferramenta', on_delete=models.CASCADE)
+    data_download = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.ferramenta.nome} - {self.data_download.strftime('%d/%m/%Y %H:%M')}"
+    
+    class Meta:
+        verbose_name = 'Download'
+        verbose_name_plural = 'Downloads'
+        ordering = ['-data_download']

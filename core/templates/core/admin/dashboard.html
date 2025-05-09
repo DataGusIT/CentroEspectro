@@ -1,0 +1,89 @@
+{% extends "core/admin/admin_base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">Painel Administrativo</h1>
+            <p class="lead">Bem-vindo ao painel administrativo do Centro Espectro. Aqui você pode gerenciar todos os
+                recursos do sistema.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Card para Categorias -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-folder fa-3x mb-3 text-primary"></i>
+                    <h3 class="card-title">Categorias</h3>
+                    <p class="card-text">Total: {{ categorias }}</p>
+                    <a href="{% url 'admin_categorias' %}" class="btn btn-primary">Gerenciar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card para FAQs -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-question-circle fa-3x mb-3 text-success"></i>
+                    <h3 class="card-title">FAQs</h3>
+                    <p class="card-text">Total: {{ faqs }}</p>
+                    <a href="{% url 'admin_faqs' %}" class="btn btn-success">Gerenciar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card para Ferramentas -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-tools fa-3x mb-3 text-warning"></i>
+                    <h3 class="card-title">Ferramentas</h3>
+                    <p class="card-text">Total: {{ ferramentas }}</p>
+                    <a href="#" class="btn btn-warning">Gerenciar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card para Contatos -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-address-book fa-3x mb-3 text-info"></i>
+                    <h3 class="card-title">Contatos</h3>
+                    <p class="card-text">Total: {{ contatos }}</p>
+                    <a href="#" class="btn btn-info">Gerenciar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card para Usuários -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x mb-3 text-danger"></i>
+                    <h3 class="card-title">Usuários</h3>
+                    <p class="card-text">Total: {{ usuarios }}</p>
+                    <a href="#" class="btn btn-danger">Gerenciar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card para Voltar ao Site -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-home fa-3x mb-3 text-secondary"></i>
+                    <h3 class="card-title">Site Principal</h3>
+                    <p class="card-text">Voltar para a página inicial</p>
+                    <a href="{% url 'index' %}" class="btn btn-secondary">Visitar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
