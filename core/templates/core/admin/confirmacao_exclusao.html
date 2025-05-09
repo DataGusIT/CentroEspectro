@@ -1,0 +1,65 @@
+{% extends "core/admin/admin_base.html" %}
+
+{% block title %}Confirmar Exclusão - Painel Administrativo{% endblock %}
+
+{% block header %}Confirmar Exclusão{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_ferramentas' %}">Ferramentas</a></li>
+<li class="breadcrumb-item active" aria-current="page">Confirmar Exclusão</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Confirmar Exclusão</h6>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        {% if ferramenta.imagem %}
+                        <img src="{{ ferramenta.imagem.url }}" alt="{{ ferramenta.nome }}" class="img-fluid mb-3"
+                            style="max-height: 150px;">
+                        {% else %}
+                        <img src="{% static 'img/no-image.png' %}" alt="Sem Imagem" class="img-fluid mb-3"
+                            style="max-height: 150px;">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h4>{{ ferramenta.nome }}</h4>
+                        <p><strong>Categoria:</strong> {{ ferramenta.categoria }}</p>
+                        <p><strong>Preço:</strong> R$ {{ ferramenta.preco|floatformat:2 }}</p>
+                        <p><strong>Código:</strong> {{ ferramenta.codigo_produto }}</p>
+                        <p><strong>Status:</strong> {% if ferramenta.ativo %}<span
+                                class="badge badge-success">Ativo</span>{% else %}<span
+                                class="badge badge-secondary">Inativo</span>{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center mb-4">
+            Tem certeza que deseja excluir permanentemente a ferramenta <strong>{{ ferramenta.nome }}</strong>?
+        </p>
+
+        <div class="text-center">
+            <form method="post" action="{% url 'admin_ferramenta_delete' ferramenta.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash mr-2"></i>Sim, Excluir Permanentemente
+                </button>
+                <a href="{% url 'admin_ferramenta_edit' ferramenta.id %}" class="btn btn-secondary ml-2">
+                    <i class="fas fa-arrow-left mr-2"></i>Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

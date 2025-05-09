@@ -1,0 +1,73 @@
+{% extends "core/admin/admin_base.html" %}
+
+{% block title %}Categorias de FAQs - Painel Administrativo{% endblock %}
+
+{% block header %}Categorias de FAQs{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_faqs' %}">FAQs</a></li>
+<li class="breadcrumb-item active" aria-current="page">Categorias</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-end">
+        <a href="{% url 'admin_categoria_faq_criar' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nova Categoria
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Categorias de FAQs</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Ícone</th>
+                        <th>Número de FAQs</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for categoria in categorias %}
+                    <tr>
+                        <td>{{ categoria.nome }}</td>
+                        <td><i class="{{ categoria.get_icone }}"></i> {{ categoria.icone }}</td>
+                        <td>{{ categoria.faqs.count }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'admin_categoria_faq_editar' categoria.id %}"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a href="{% url 'admin_categoria_faq_excluir' categoria.id %}"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">Nenhuma categoria cadastrada.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        $('#dataTable').DataTable();
+    });
+</script>
+{% endblock %}

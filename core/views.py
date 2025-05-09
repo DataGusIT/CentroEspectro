@@ -5,9 +5,11 @@ from django.contrib import messages
 from django.http import HttpResponse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm
 from django.db.models import Q
-from .models import FAQ, Categoria, Contato, Ferramenta, TipoFerramenta, CustomUser, UserDownload
+from .models import (
+    FAQ, CategoriaFAQ, CategoriaContato, CategoriaFerramenta, 
+    Contato, Ferramenta, CustomUser, UserDownload
+)
 from collections import defaultdict
-
 def index(request):
     return render(request, 'core/index.html', {'title': 'Início'})
 
@@ -19,22 +21,20 @@ def newsletter_signup(request):
     return redirect('index')  # ou para qualquer outra página
 
 def ferramentas(request):
-    # Obter todas as ferramentas agrupadas por categoria
-    ferramentas_comunicacao = Ferramenta.objects.filter(categoria='comunicacao')
-    ferramentas_comportamentais = Ferramenta.objects.filter(categoria='comportamental')
-    ferramentas_educacionais = Ferramenta.objects.filter(categoria='educacional')
-    ferramentas_organizacao = Ferramenta.objects.filter(categoria='organizacao')
-    ferramentas_sensoriais = Ferramenta.objects.filter(categoria='sensorial')
-    ferramentas_tecnologicas = Ferramenta.objects.filter(categoria='tecnologica')
+    # Obter todas as ferramentas agrupadas por categoria (usando as novas categorias)
+    ferramentas_pictogramas = Ferramenta.objects.filter(categoria='pictogramas_escolares')
+    ferramentas_alfabetizacao = Ferramenta.objects.filter(categoria='alfabetizacao')
+    ferramentas_brinquedos = Ferramenta.objects.filter(categoria='brinquedos_brincadeiras')
+    ferramentas_historias = Ferramenta.objects.filter(categoria='historias_sociais')
+    ferramentas_atividades = Ferramenta.objects.filter(categoria='atividades_diversas')
     
     context = {
         'title': 'Ferramentas',
-        'ferramentas_comunicacao': ferramentas_comunicacao,
-        'ferramentas_comportamentais': ferramentas_comportamentais,
-        'ferramentas_educacionais': ferramentas_educacionais,
-        'ferramentas_organizacao': ferramentas_organizacao,
-        'ferramentas_sensoriais': ferramentas_sensoriais,
-        'ferramentas_tecnologicas': ferramentas_tecnologicas,
+        'ferramentas_pictogramas': ferramentas_pictogramas,
+        'ferramentas_alfabetizacao': ferramentas_alfabetizacao,
+        'ferramentas_brinquedos': ferramentas_brinquedos,
+        'ferramentas_historias': ferramentas_historias,
+        'ferramentas_atividades': ferramentas_atividades,
     }
     
     return render(request, 'core/ferramentas.html', context)
@@ -48,7 +48,7 @@ def detalhes_ferramenta(request, id):
 
 def duvidas(request):
     # Busca todas as categorias e FAQs
-    categorias = Categoria.objects.all()
+    categorias = CategoriaFAQ.objects.all()
     faqs_por_categoria = defaultdict(list)
     
     # Verifica se há um termo de pesquisa
@@ -109,7 +109,7 @@ def contatos(request):
         'contatos_escolas': contatos_escolas,
         'contatos_apoio': contatos_apoio,
         'contatos_emergencia': contatos_emergencia,
-        'sem_contatos': sem_contatos,  # <--- Aqui está o que você precisa
+        'sem_contatos': sem_contatos,
     }
     
     return render(request, 'core/contatos.html', context)
@@ -214,7 +214,10 @@ def register_download(request, ferramenta_id):
 # Views para gestão de recursos (apenas para admins)
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    categorias = Categoria.objects.all().count()
+    categorias_faq = CategoriaFAQ.objects.all().count()
+    categorias_contato = CategoriaContato.objects.all().count()
+    categorias_ferramenta = CategoriaFerramenta.objects.all().count()
+    
     ferramentas = Ferramenta.objects.all().count()
     contatos = Contato.objects.all().count()
     faqs = FAQ.objects.all().count()
@@ -222,7 +225,9 @@ def admin_dashboard(request):
     
     context = {
         'title': 'Dashboard Admin',
-        'categorias': categorias,
+        'categorias_faq': categorias_faq,
+        'categorias_contato': categorias_contato,
+        'categorias_ferramenta': categorias_ferramenta,
         'ferramentas': ferramentas,
         'contatos': contatos,
         'faqs': faqs,
@@ -231,61 +236,61 @@ def admin_dashboard(request):
     
     return render(request, 'core/admin/dashboard.html', context)
 
-# CRUD para Categorias
+# CRUD para Categorias FAQ
 @user_passes_test(is_admin)
-def admin_categorias(request):
-    categorias = Categoria.objects.all()
-    return render(request, 'core/admin/categorias.html', {
+def admin_categorias_faq(request):
+    categorias = CategoriaFAQ.objects.all()
+    return render(request, 'core/admin/categorias_faq.html', {
         'categorias': categorias,
-        'title': 'Gestão de Categorias'
+        'title': 'Gestão de Categorias FAQ'
     })
 
 @user_passes_test(is_admin)
-def admin_categoria_criar(request):
+def admin_categoria_faq_criar(request):
     if request.method == 'POST':
         nome = request.POST.get('nome')
         icone = request.POST.get('icone')
         
-        categoria = Categoria(nome=nome, icone=icone)
+        categoria = CategoriaFAQ(nome=nome, icone=icone)
         categoria.save()
         
-        messages.success(request, 'Categoria criada com sucesso!')
-        return redirect('admin_categorias')
+        messages.success(request, 'Categoria FAQ criada com sucesso!')
+        return redirect('admin_categorias_faq')
     
     return render(request, 'core/admin/categoria_form.html', {
-        'title': 'Nova Categoria'
+        'title': 'Nova Categoria FAQ'
     })
 
 @user_passes_test(is_admin)
-def admin_categoria_editar(request, id):
-    categoria = get_object_or_404(Categoria, id=id)
+def admin_categoria_faq_editar(request, id):
+    categoria = get_object_or_404(CategoriaFAQ, id=id)
     
     if request.method == 'POST':
         categoria.nome = request.POST.get('nome')
         categoria.icone = request.POST.get('icone')
         categoria.save()
         
-        messages.success(request, 'Categoria atualizada com sucesso!')
-        return redirect('admin_categorias')
+        messages.success(request, 'Categoria FAQ atualizada com sucesso!')
+        return redirect('admin_categorias_faq')
     
     return render(request, 'core/admin/categoria_form.html', {
         'categoria': categoria,
-        'title': 'Editar Categoria'
+        'title': 'Editar Categoria FAQ'
     })
 
 @user_passes_test(is_admin)
-def admin_categoria_excluir(request, id):
-    categoria = get_object_or_404(Categoria, id=id)
+def admin_categoria_faq_excluir(request, id):
+    categoria = get_object_or_404(CategoriaFAQ, id=id)
     
     if request.method == 'POST':
         categoria.delete()
-        messages.success(request, 'Categoria excluída com sucesso!')
-        return redirect('admin_categorias')
+        messages.success(request, 'Categoria FAQ excluída com sucesso!')
+        return redirect('admin_categorias_faq')
     
     return render(request, 'core/admin/confirmacao_exclusao.html', {
         'objeto': categoria,
-        'tipo': 'Categoria',
-        'title': 'Excluir Categoria'
+        'tipo': 'Categoria FAQ',
+        'title': 'Excluir Categoria FAQ'
     })
 
 # CRUD para FAQ
@@ -299,13 +304,13 @@ def admin_faqs(request):
 
 @user_passes_test(is_admin)
 def admin_faq_criar(request):
-    categorias = Categoria.objects.all()
+    categorias = CategoriaFAQ.objects.all()
     
     if request.method == 'POST':
         pergunta = request.POST.get('pergunta')
         resposta = request.POST.get('resposta')
         categoria_id = request.POST.get('categoria')
-        categoria = get_object_or_404(Categoria, id=categoria_id)
+        categoria = get_object_or_404(CategoriaFAQ, id=categoria_id)
         
         faq = FAQ(pergunta=pergunta, resposta=resposta, categoria=categoria)
         faq.save()
@@ -321,13 +326,13 @@ def admin_faq_criar(request):
 @user_passes_test(is_admin)
 def admin_faq_editar(request, id):
     faq = get_object_or_404(FAQ, id=id)
-    categorias = Categoria.objects.all()
+    categorias = CategoriaFAQ.objects.all()
     
     if request.method == 'POST':
         faq.pergunta = request.POST.get('pergunta')
         faq.resposta = request.POST.get('resposta')
         categoria_id = request.POST.get('categoria')
-        faq.categoria = get_object_or_404(Categoria, id=categoria_id)
+        faq.categoria = get_object_or_404(CategoriaFAQ, id=categoria_id)
         faq.save()
         
         messages.success(request, 'FAQ atualizada com sucesso!')
@@ -352,6 +357,289 @@ def admin_faq_excluir(request, id):
         'objeto': faq,
         'tipo': 'FAQ',
         'title': 'Excluir FAQ'
+    })
+
+# Adicione estas funções ao seu arquivo views.py
+
+# CRUD para Categorias de Contato
+@user_passes_test(is_admin)
+def admin_categorias_contato(request):
+    categorias = CategoriaContato.objects.all()
+    return render(request, 'core/admin/categorias_contato.html', {
+        'categorias': categorias,
+        'title': 'Gestão de Categorias de Contato'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_contato_criar(request):
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        icone = request.POST.get('icone')
+        
+        categoria = CategoriaContato(nome=nome, icone=icone)
+        categoria.save()
+        
+        messages.success(request, 'Categoria de Contato criada com sucesso!')
+        return redirect('admin_categorias_contato')
+    
+    return render(request, 'core/admin/categoria_form.html', {
+        'title': 'Nova Categoria de Contato'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_contato_editar(request, id):
+    categoria = get_object_or_404(CategoriaContato, id=id)
+    
+    if request.method == 'POST':
+        categoria.nome = request.POST.get('nome')
+        categoria.icone = request.POST.get('icone')
+        categoria.save()
+        
+        messages.success(request, 'Categoria de Contato atualizada com sucesso!')
+        return redirect('admin_categorias_contato')
+    
+    return render(request, 'core/admin/categoria_form.html', {
+        'categoria': categoria,
+        'title': 'Editar Categoria de Contato'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_contato_excluir(request, id):
+    categoria = get_object_or_404(CategoriaContato, id=id)
+    
+    if request.method == 'POST':
+        categoria.delete()
+        messages.success(request, 'Categoria de Contato excluída com sucesso!')
+        return redirect('admin_categorias_contato')
+    
+    return render(request, 'core/admin/confirmacao_exclusao.html', {
+        'objeto': categoria,
+        'tipo': 'Categoria de Contato',
+        'title': 'Excluir Categoria de Contato'
+    })
+
+# CRUD para Contatos
+@user_passes_test(is_admin)
+def admin_contatos(request):
+    contatos = Contato.objects.all()
+    return render(request, 'core/admin/contatos.html', {
+        'contatos': contatos,
+        'title': 'Gestão de Contatos'
+    })
+
+@user_passes_test(is_admin)
+def admin_contato_criar(request):
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        descricao = request.POST.get('descricao')
+        imagem_url = request.POST.get('imagem_url')
+        cidade = request.POST.get('cidade')
+        estado = request.POST.get('estado')
+        telefone = request.POST.get('telefone')
+        horario_funcionamento = request.POST.get('horario_funcionamento')
+        tipo = request.POST.get('tipo')
+        atendimento_presencial = 'atendimento_presencial' in request.POST
+        atendimento_online = 'atendimento_online' in request.POST
+        
+        contato = Contato(
+            nome=nome,
+            descricao=descricao,
+            imagem_url=imagem_url,
+            cidade=cidade,
+            estado=estado,
+            telefone=telefone,
+            horario_funcionamento=horario_funcionamento,
+            tipo=tipo,
+            atendimento_presencial=atendimento_presencial,
+            atendimento_online=atendimento_online
+        )
+        contato.save()
+        
+        messages.success(request, 'Contato criado com sucesso!')
+        return redirect('admin_contatos')
+    
+    return render(request, 'core/admin/contato_form.html', {
+        'title': 'Novo Contato',
+        'tipos': Contato.TIPO_CHOICES
+    })
+
+@user_passes_test(is_admin)
+def admin_contato_editar(request, id):
+    contato = get_object_or_404(Contato, id=id)
+    
+    if request.method == 'POST':
+        contato.nome = request.POST.get('nome')
+        contato.descricao = request.POST.get('descricao')
+        contato.imagem_url = request.POST.get('imagem_url')
+        contato.cidade = request.POST.get('cidade')
+        contato.estado = request.POST.get('estado')
+        contato.telefone = request.POST.get('telefone')
+        contato.horario_funcionamento = request.POST.get('horario_funcionamento')
+        contato.tipo = request.POST.get('tipo')
+        contato.atendimento_presencial = 'atendimento_presencial' in request.POST
+        contato.atendimento_online = 'atendimento_online' in request.POST
+        contato.save()
+        
+        messages.success(request, 'Contato atualizado com sucesso!')
+        return redirect('admin_contatos')
+    
+    return render(request, 'core/admin/contato_form.html', {
+        'contato': contato,
+        'title': 'Editar Contato',
+        'tipos': Contato.TIPO_CHOICES
+    })
+
+@user_passes_test(is_admin)
+def admin_contato_excluir(request, id):
+    contato = get_object_or_404(Contato, id=id)
+    
+    if request.method == 'POST':
+        contato.delete()
+        messages.success(request, 'Contato excluído com sucesso!')
+        return redirect('admin_contatos')
+    
+    return render(request, 'core/admin/confirmacao_exclusao.html', {
+        'objeto': contato,
+        'tipo': 'Contato',
+        'title': 'Excluir Contato'
+    })
+
+# CRUD para Categorias de Ferramenta
+@user_passes_test(is_admin)
+def admin_categorias_ferramenta(request):
+    categorias = CategoriaFerramenta.objects.all()
+    return render(request, 'core/admin/categorias_ferramenta.html', {
+        'categorias': categorias,
+        'title': 'Gestão de Categorias de Ferramenta'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_ferramenta_criar(request):
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        icone = request.POST.get('icone')
+        
+        categoria = CategoriaFerramenta(nome=nome, icone=icone)
+        categoria.save()
+        
+        messages.success(request, 'Categoria de Ferramenta criada com sucesso!')
+        return redirect('admin_categorias_ferramenta')
+    
+    return render(request, 'core/admin/categoria_form.html', {
+        'title': 'Nova Categoria de Ferramenta'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_ferramenta_editar(request, id):
+    categoria = get_object_or_404(CategoriaFerramenta, id=id)
+    
+    if request.method == 'POST':
+        categoria.nome = request.POST.get('nome')
+        categoria.icone = request.POST.get('icone')
+        categoria.save()
+        
+        messages.success(request, 'Categoria de Ferramenta atualizada com sucesso!')
+        return redirect('admin_categorias_ferramenta')
+    
+    return render(request, 'core/admin/categoria_form.html', {
+        'categoria': categoria,
+        'title': 'Editar Categoria de Ferramenta'
+    })
+
+@user_passes_test(is_admin)
+def admin_categoria_ferramenta_excluir(request, id):
+    categoria = get_object_or_404(CategoriaFerramenta, id=id)
+    
+    if request.method == 'POST':
+        categoria.delete()
+        messages.success(request, 'Categoria de Ferramenta excluída com sucesso!')
+        return redirect('admin_categorias_ferramenta')
+    
+    return render(request, 'core/admin/confirmacao_exclusao.html', {
+        'objeto': categoria,
+        'tipo': 'Categoria de Ferramenta',
+        'title': 'Excluir Categoria de Ferramenta'
+    })
+
+# CRUD para Ferramentas
+@user_passes_test(is_admin)
+def admin_ferramentas(request):
+    ferramentas = Ferramenta.objects.all()
+    return render(request, 'core/admin/ferramentas.html', {
+        'ferramentas': ferramentas,
+        'title': 'Gestão de Ferramentas'
+    })
+
+@user_passes_test(is_admin)
+def admin_ferramenta_criar(request):
+    categorias = CategoriaFerramenta.objects.all()
+    
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        descricao = request.POST.get('descricao')
+        icone_classe = request.POST.get('icone_classe')
+        tipo_id = request.POST.get('tipo')
+        tipo = get_object_or_404(CategoriaFerramenta, id=tipo_id)
+        eh_gratuita = 'eh_gratuita' in request.POST
+        categoria = request.POST.get('categoria')
+        
+        ferramenta = Ferramenta(
+            nome=nome,
+            descricao=descricao,
+            icone_classe=icone_classe,
+            tipo=tipo,
+            eh_gratuita=eh_gratuita,
+            categoria=categoria
+        )
+        ferramenta.save()
+        
+        messages.success(request, 'Ferramenta criada com sucesso!')
+        return redirect('admin_ferramentas')
+    
+    return render(request, 'core/admin/ferramenta_form.html', {
+        'title': 'Nova Ferramenta',
+        'categorias': categorias,
+        'opcoes_categoria': dict(Ferramenta._meta.get_field('categoria').choices)
+    })
+
+@user_passes_test(is_admin)
+def admin_ferramenta_editar(request, id):
+    ferramenta = get_object_or_404(Ferramenta, id=id)
+    categorias = CategoriaFerramenta.objects.all()
+    
+    if request.method == 'POST':
+        ferramenta.nome = request.POST.get('nome')
+        ferramenta.descricao = request.POST.get('descricao')
+        ferramenta.icone_classe = request.POST.get('icone_classe')
+        tipo_id = request.POST.get('tipo')
+        ferramenta.tipo = get_object_or_404(CategoriaFerramenta, id=tipo_id)
+        ferramenta.eh_gratuita = 'eh_gratuita' in request.POST
+        ferramenta.categoria = request.POST.get('categoria')
+        ferramenta.save()
+        
+        messages.success(request, 'Ferramenta atualizada com sucesso!')
+        return redirect('admin_ferramentas')
+    
+    return render(request, 'core/admin/ferramenta_form.html', {
+        'ferramenta': ferramenta,
+        'title': 'Editar Ferramenta',
+        'categorias': categorias,
+        'opcoes_categoria': dict(Ferramenta._meta.get_field('categoria').choices)
+    })
+
+@user_passes_test(is_admin)
+def admin_ferramenta_excluir(request, id):
+    ferramenta = get_object_or_404(Ferramenta, id=id)
+    
+    if request.method == 'POST':
+        ferramenta.delete()
+        messages.success(request, 'Ferramenta excluída com sucesso!')
+        return redirect('admin_ferramentas')
+    
+    return render(request, 'core/admin/confirmacao_exclusao.html', {
+        'objeto': ferramenta,
+        'tipo': 'Ferramenta',
+        'title': 'Excluir Ferramenta'
     })
 
 def document_list(request):

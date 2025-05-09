@@ -1,5 +1,3 @@
-# core/urls.py (atualização do arquivo existente)
-
 from django.urls import path
 from . import views
 
@@ -27,11 +25,11 @@ urlpatterns = [
     # Rotas de administração
     path('administracao/', views.admin_dashboard, name='admin_dashboard'),
     
-    # CRUD Categorias
-    path('administracao/categorias/', views.admin_categorias, name='admin_categorias'),
-    path('administracao/categorias/criar/', views.admin_categoria_criar, name='admin_categoria_criar'),
-    path('administracao/categorias/editar/<int:id>/', views.admin_categoria_editar, name='admin_categoria_editar'),
-    path('administracao/categorias/excluir/<int:id>/', views.admin_categoria_excluir, name='admin_categoria_excluir'),
+    # CRUD Categorias FAQ
+    path('administracao/categorias-faq/', views.admin_categorias_faq, name='admin_categorias_faq'),
+    path('administracao/categorias-faq/criar/', views.admin_categoria_faq_criar, name='admin_categoria_faq_criar'),
+    path('administracao/categorias-faq/editar/<int:id>/', views.admin_categoria_faq_editar, name='admin_categoria_faq_editar'),
+    path('administracao/categorias-faq/excluir/<int:id>/', views.admin_categoria_faq_excluir, name='admin_categoria_faq_excluir'),
     
     # CRUD FAQs
     path('administracao/faqs/', views.admin_faqs, name='admin_faqs'),
@@ -39,5 +37,27 @@ urlpatterns = [
     path('administracao/faqs/editar/<int:id>/', views.admin_faq_editar, name='admin_faq_editar'),
     path('administracao/faqs/excluir/<int:id>/', views.admin_faq_excluir, name='admin_faq_excluir'),
     
-    # Adicione rotas para Contatos e Ferramentas de maneira similar
+    # CRUD Categorias Contato
+    path('administracao/categorias-contato/', views.admin_categorias_contato, name='admin_categorias_contato'),
+    path('administracao/categorias-contato/criar/', views.admin_categoria_contato_criar, name='admin_categoria_contato_criar'),
+    path('administracao/categorias-contato/editar/<int:id>/', views.admin_categoria_contato_editar, name='admin_categoria_contato_editar'),
+    path('administracao/categorias-contato/excluir/<int:id>/', views.admin_categoria_contato_excluir, name='admin_categoria_contato_excluir'),
+    
+    # CRUD Contatos
+    path('administracao/contatos/', views.admin_contatos, name='admin_contatos'),
+    path('administracao/contatos/criar/', views.admin_contato_criar, name='admin_contato_criar'),
+    path('administracao/contatos/editar/<int:id>/', views.admin_contato_editar, name='admin_contato_editar'),
+    path('administracao/contatos/excluir/<int:id>/', views.admin_contato_excluir, name='admin_contato_excluir'),
+    
+    # CRUD Categorias Ferramenta
+    path('administracao/categorias-ferramenta/', views.admin_categorias_ferramenta, name='admin_categorias_ferramenta'),
+    path('administracao/categorias-ferramenta/criar/', views.admin_categoria_ferramenta_criar, name='admin_categoria_ferramenta_criar'),
+    path('administracao/categorias-ferramenta/editar/<int:id>/', views.admin_categoria_ferramenta_editar, name='admin_categoria_ferramenta_editar'),
+    path('administracao/categorias-ferramenta/excluir/<int:id>/', views.admin_categoria_ferramenta_excluir, name='admin_categoria_ferramenta_excluir'),
+    
+    # CRUD Ferramentas
+    path('administracao/ferramentas/', views.admin_ferramentas, name='admin_ferramentas'),
+    path('administracao/ferramentas/criar/', views.admin_ferramenta_criar, name='admin_ferramenta_criar'),
+    path('administracao/ferramentas/editar/<int:id>/', views.admin_ferramenta_editar, name='admin_ferramenta_editar'),
+    path('administracao/ferramentas/excluir/<int:id>/', views.admin_ferramenta_excluir, name='admin_ferramenta_excluir'),
 ]

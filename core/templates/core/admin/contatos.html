@@ -1,0 +1,125 @@
+{% extends "core/admin/admin_base.html" %}
+
+{% block title %}Contatos - Painel Administrativo{% endblock %}
+
+{% block header %}Contatos{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Contatos</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between">
+        <div class="btn-group" role="group">
+            <a href="{% url 'admin_categorias_contato' %}" class="btn btn-primary">
+                <i class="fas fa-tags"></i> Categorias
+            </a>
+        </div>
+        <a href="{% url 'admin_contato_criar' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Novo Contato
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Contatos</h6>
+        <div>
+            <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100" action=""
+                method="get">
+                <div class="input-group">
+                    <input type="text" class="form-control bg-light border-0 small" placeholder="Buscar contato..."
+                        name="q" value="{{ request.GET.q }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search fa-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Cidade/Estado</th>
+                        <th>Telefone</th>
+                        <th>Avaliação</th>
+                        <th>Atendimento</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contato in contatos %}
+                    <tr>
+                        <td>{{ contato.nome }}</td>
+                        <td>{{ contato.get_tipo_display }}</td>
+                        <td>{{ contato.cidade }}/{{ contato.estado }}</td>
+                        <td>{{ contato.telefone }}</td>
+                        <td>
+                            {% if contato.avaliacao > 0 %}
+                            <div class="d-flex align-items-center">
+                                <div class="mr-2">{{ contato.avaliacao }}</div>
+                                <div class="small">
+                                    {% for i in "12345" %}
+                                    {% if forloop.counter <= contato.avaliacao %} <i class="fas fa-star text-warning">
+                                        </i>
+                                        {% elif forloop.counter <= contato.avaliacao|add:"0.5" %} <i
+                                            class="fas fa-star-half-alt text-warning"></i>
+                                            {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                            {% endfor %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">Sem avaliação</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if contato.atendimento_presencial %}
+                            <span class="badge bg-success">Presencial</span>
+                            {% endif %}
+                            {% if contato.atendimento_online %}
+                            <span class="badge bg-info">Online</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'admin_contato_editar' contato.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a href="{% url 'admin_contato_excluir' contato.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">Nenhum contato cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        $('#dataTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+            }
+        });
+    });
+</script>
+{% endblock %}

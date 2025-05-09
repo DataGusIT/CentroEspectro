@@ -1,148 +1,160 @@
 {% extends "core/admin/admin_base.html" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}
+{% if categoria %}
+Editar Categoria - Painel Administrativo
+{% else %}
+Nova Categoria - Painel Administrativo
+{% endif %}
+{% endblock %}
 
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<style>
-    .icon-preview {
-        font-size: 2rem;
-        margin-top: 10px;
-        color: #0d6efd;
-    }
+{% block header %}
+{% if categoria %}
+Editar Categoria {{ categoria.nome }}
+{% else %}
+Nova Categoria
+{% endif %}
+{% endblock %}
 
-    .icon-option {
-        padding: 5px;
-    }
-
-    .icon-option i {
-        margin-right: 10px;
-        width: 20px;
-    }
-</style>
+{% block breadcrumb %}
+{% if categoria_tipo == 'faq' %}
+<li class="breadcrumb-item"><a href="{% url 'admin_faqs' %}">FAQs</a></li>
+<li class="breadcrumb-item"><a href="{% url 'admin_categorias_faq' %}">Categorias</a></li>
+{% elif categoria_tipo == 'contato' %}
+<li class="breadcrumb-item"><a href="{% url 'admin_contatos' %}">Contatos</a></li>
+<li class="breadcrumb-item"><a href="{% url 'admin_categorias_contato' %}">Categorias</a></li>
+{% elif categoria_tipo == 'ferramenta' %}
+<li class="breadcrumb-item"><a href="{% url 'admin_ferramentas' %}">Ferramentas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'admin_categorias_ferramenta' %}">Categorias</a></li>
+{% endif %}
+<li class="breadcrumb-item active" aria-current="page">
+    {% if categoria %}Editar{% else %}Nova{% endif %}
+</li>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'admin_categorias' %}">Categorias</a></li>
-                    <li class="breadcrumb-item active">{% if categoria %}Editar{% else %}Nova{% endif %} Categoria</li>
-                </ol>
-            </nav>
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            {% if categoria %}Editar{% else %}Nova{% endif %} Categoria
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="card-title h5 m-0">{% if categoria %}Editar Categoria{% else %}Nova Categoria{% endif %}
-                    </h2>
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="{{ form.nome.id_for_label }}" class="form-label">Nome</label>
+                {{ form.nome }}
+                {% if form.nome.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.nome.errors %}
+                    {{ error }}
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
+                {% endif %}
+            </div>
 
-                        <div class="mb-3">
-                            <label for="nome" class="form-label">Nome da Categoria</label>
-                            <input type="text" class="form-control" id="nome" name="nome" required
-                                value="{% if categoria %}{{ categoria.nome }}{% endif %}">
-                        </div>
+            <div class="mb-3">
+                <label for="{{ form.icone.id_for_label }}" class="form-label">Ícone</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i id="icone-preview"
+                            class="{{ form.icone.value|default:'fas fa-question-circle' }}"></i></span>
+                    {{ form.icone }}
+                </div>
+                {% if form.icone.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.icone.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="form-text">Digite o nome de um ícone do FontAwesome (ex: fas fa-home)</div>
+            </div>
 
-                        <div class="mb-3">
-                            <label for="icone" class="form-label">Ícone</label>
-                            <select class="form-select icon-select" id="icone" name="icone" required>
-                                <option value="fas fa-info-circle" {% if categoria.icone=='fas fa-info-circle'
-                                    %}selected{% endif %}>
-                                    Informação (fas fa-info-circle)
-                                </option>
-                                <option value="fas fa-question-circle" {% if categoria.icone=='fas fa-question-circle'
-                                    %}selected{% endif %}>
-                                    Dúvida (fas fa-question-circle)
-                                </option>
-                                <option value="fas fa-stethoscope" {% if categoria.icone=='fas fa-stethoscope'
-                                    %}selected{% endif %}>
-                                    Diagnóstico (fas fa-stethoscope)
-                                </option>
-                                <option value="fas fa-heartbeat" {% if categoria.icone=='fas fa-heartbeat' %}selected{%
-                                    endif %}>
-                                    Tratamento (fas fa-heartbeat)
-                                </option>
-                                <option value="fas fa-hands-helping" {% if categoria.icone=='fas fa-hands-helping'
-                                    %}selected{% endif %}>
-                                    Apoio (fas fa-hands-helping)
-                                </option>
-                                <option value="fas fa-book" {% if categoria.icone=='fas fa-book' %}selected{% endif %}>
-                                    Conceitos (fas fa-book)
-                                </option>
-                                <option value="fas fa-users" {% if categoria.icone=='fas fa-users' %}selected{% endif
-                                    %}>
-                                    Grupos (fas fa-users)
-                                </option>
-                                <option value="fas fa-hospital" {% if categoria.icone=='fas fa-hospital' %}selected{%
-                                    endif %}>
-                                    Hospital (fas fa-hospital)
-                                </option>
-                                <option value="fas fa-chart-line" {% if categoria.icone=='fas fa-chart-line'
-                                    %}selected{% endif %}>
-                                    Estatísticas (fas fa-chart-line)
-                                </option>
-                                <option value="fas fa-clipboard-list" {% if categoria.icone=='fas fa-clipboard-list'
-                                    %}selected{% endif %}>
-                                    Lista (fas fa-clipboard-list)
-                                </option>
-                            </select>
-                            <div class="text-center mt-3">
-                                <div class="icon-preview">
-                                    <i
-                                        class="{% if categoria %}{{ categoria.icone }}{% else %}fas fa-info-circle{% endif %}"></i>
-                                </div>
-                                <small class="text-muted">Visualização do ícone selecionado</small>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6 class="font-weight-bold">Escolha um ícone:</h6>
+                    <div class="row mt-3 mb-3">
+                        <div class="col-12 d-flex flex-wrap">
+                            {% for icone in icones_sugeridos %}
+                            <div class="icon-select-item p-2 m-1 border rounded text-center" data-icon="{{ icone }}">
+                                <i class="{{ icone }} fa-2x mb-2"></i>
+                                <div class="small">{{ icone }}</div>
                             </div>
+                            {% endfor %}
                         </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'admin_categorias' %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-1"></i> Voltar
-                            </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-1"></i> Salvar
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ voltar_url }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Inicializa o Select2
-        $('.icon-select').select2({
-            templateResult: formatIconOption,
-            templateSelection: formatIconOption
-        });
-
-        // Atualiza a visualização do ícone quando selecionado
-        $('.icon-select').on('change', function () {
-            const iconClass = $(this).val();
-            $('.icon-preview i').attr('class', iconClass);
-        });
-    });
-
-    // Formata as opções do select com ícones
-    function formatIconOption(icon) {
-        if (!icon.id) {
-            return icon.text;
-        }
-        var $icon = $(
-            '<span class="icon-option"><i class="' + icon.id + '"></i>' + icon.text + '</span>'
-        );
-        return $icon;
+{% block extra_css %}
+<style>
+    .icon-select-item {
+        width: 100px;
+        height: 100px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
+
+    .icon-select-item:hover {
+        background-color: #f8f9fc;
+        border-color: #4e73df !important;
+    }
+
+    .icon-select-item.selected {
+        background-color: #e8f0fe;
+        border-color: #4e73df !important;
+        border-width: 2px !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Atualiza o ícone de preview quando o valor do input muda
+        $('#{{ form.icone.id_for_label }}').on('input', function () {
+            $('#icone-preview').attr('class', $(this).val());
+        });
+
+        // Seleciona o ícone quando um item é clicado
+        $('.icon-select-item').click(function () {
+            const iconClass = $(this).data('icon');
+            $('#{{ form.icone.id_for_label }}').val(iconClass);
+            $('#icone-preview').attr('class', iconClass);
+
+            // Marca o item selecionado
+            $('.icon-select-item').removeClass('selected');
+            $(this).addClass('selected');
+        });
+
+        // Marca o item selecionado inicialmente
+        const currentIcon = $('#{{ form.icone.id_for_label }}').val();
+        if (currentIcon) {
+            $(`.icon-select-item[data-icon="${currentIcon}"]`).addClass('selected');
+        }
+    });
 </script>
 {% endblock %}
