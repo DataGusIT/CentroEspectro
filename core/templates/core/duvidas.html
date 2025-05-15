@@ -103,7 +103,7 @@
                                 aria-labelledby="heading{{ faq.id }}"
                                 data-bs-parent="#accordion{{ categoria|slugify }}">
                                 <div class="accordion-body">
-                                    <p>{{ faq.resposta|linebreaksbr|safe }}</p>
+                                    <div class="faq-content">{{ faq.resposta|linebreaksbr|safe }}</div>
                                 </div>
                             </div>
                         </div>
@@ -246,18 +246,31 @@
         });
     });
 
-    // Adicionar animação aos acordeões
+    // Melhorar a animação dos acordeões
     const accordionButtons = document.querySelectorAll('.accordion-button');
+
     accordionButtons.forEach(button => {
         button.addEventListener('click', function () {
+            // Atualizar estilo do botão
+            this.classList.toggle('active');
+
             // Pequena pausa para permitir que o bootstrap faça a transição
             setTimeout(() => {
                 const isExpanded = this.getAttribute('aria-expanded') === 'true';
                 if (isExpanded) {
                     const collapseElement = this.parentElement.nextElementSibling;
                     collapseElement.querySelector('.accordion-body').classList.add('animate__animated', 'animate__fadeIn');
+
+                    // Adiciona efeito de ripple ao clicar
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('ripple-effect');
+                    this.appendChild(ripple);
+
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 1000);
                 }
-            }, 300);
+            }, 100);
         });
     });
 
@@ -284,68 +297,210 @@
                 );
                 button.innerHTML = highlightedContent;
             });
+
+            // Expandir automaticamente os acordeões que contêm o termo pesquisado
+            document.querySelectorAll('.accordion-button mark').forEach(mark => {
+                const button = mark.closest('.accordion-button');
+                if (button && button.classList.contains('collapsed')) {
+                    button.click();
+                }
+            });
         }
+    }
+
+    // Formatação melhorada para conteúdo do FAQ
+    function enhanceFAQContent() {
+        document.querySelectorAll('.faq-content').forEach(content => {
+            // Formatar links
+            let html = content.innerHTML;
+
+            // Adicionar estilos a listas se existirem
+            if (html.includes('<ul>') || html.includes('<ol>')) {
+                html = html.replace(/<ul>/g, '<ul class="faq-list">');
+                html = html.replace(/<ol>/g, '<ol class="faq-list">');
+            }
+
+            // Destacar termos importantes (palavras com asteriscos)
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-primary">$1</strong>');
+
+            // Formatar tópicos especiais (começa com #)
+            html = html.replace(/^#\s(.*?)$/gm, '<h5 class="mt-3 mb-2 text-primary">$1</h5>');
+
+            content.innerHTML = html;
+        });
     }
 
     // Executar após a página carregar
     document.addEventListener('DOMContentLoaded', function () {
         highlightText();
+        enhanceFAQContent();
+
+        // Adicionar classes de animação aos elementos do FAQ
+        document.querySelectorAll('.accordion-item').forEach((item, index) => {
+            item.classList.add('animate__animated', 'animate__fadeInUp');
+            item.style.animationDelay = `${index * 0.1}s`;
+        });
     });
 </script>
 {% endblock %}
 
-{% block extra_styles %}
+{% block extra_css %}
+{{ block.super }}
 <style>
     /* Estilos específicos para a página de FAQs */
     .accordion-button {
         background-color: #fff;
         border: none;
-        font-weight: 500;
-        padding: 1.2rem 1.5rem;
+        font-weight: 600;
+        padding: 1.5rem 2rem;
         color: var(--gray-800);
         box-shadow: none;
+        border-radius: 15px !important;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .accordion-button::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(to bottom, var(--primary), var(--primary-light));
+        opacity: 0;
+        transition: all 0.3s ease;
     }
 
     .accordion-button:not(.collapsed) {
-        background-color: var(--primary);
-        color: white;
-        box-shadow: none;
+        background: linear-gradient(135deg, var(--primary-very-light) 0%, rgba(255, 255, 255, 0.95) 100%);
+        color: var(--primary-dark);
+        box-shadow: 0 10px 20px rgba(106, 62, 161, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .accordion-button:not(.collapsed)::before {
+        opacity: 1;
     }
 
     .accordion-button:not(.collapsed)::after {
-        filter: brightness(0) invert(1);
+        color: var(--primary);
+        transform: rotate(180deg) scale(1.2);
+        filter: none;
     }
 
     .accordion-button:focus {
-        box-shadow: none;
+        box-shadow: 0 0 0 2px rgba(106, 62, 161, 0.1);
         border-color: transparent;
     }
 
+    .accordion-button:hover {
+        background-color: var(--primary-very-light);
+        transform: translateY(-2px);
+    }
+
     .accordion-body {
-        padding: 1.5rem;
+        padding: 2rem;
         background-color: #fff;
         color: var(--gray-700);
         line-height: 1.8;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 10px 20px rgba(106, 62, 161, 0.03);
+        position: relative;
+        font-size: 1.05rem;
+    }
+
+    .accordion-body p {
+        margin-bottom: 1.2rem;
+        text-align: justify;
+    }
+
+    .accordion-body p:last-child {
+        margin-bottom: 0;
+    }
+
+    .accordion-body ul,
+    .accordion-body ol {
+        padding-left: 1.5rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .accordion-body ul li,
+    .accordion-body ol li {
+        margin-bottom: 0.5rem;
+    }
+
+    .accordion-body strong,
+    .accordion-body b {
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+
+    .accordion-body a {
+        color: var(--primary);
+        text-decoration: none;
+        position: relative;
+        display: inline-block;
+    }
+
+    .accordion-body a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(to right, var(--primary), var(--primary-light));
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.3s ease;
+    }
+
+    .accordion-body a:hover::after {
+        transform: scaleX(1);
+        transform-origin: left;
     }
 
     .faq-nav .btn {
         border-radius: 30px;
         margin: 0 4px;
         font-size: 0.9rem;
-        transition: all 0.3s ease;
-        padding: 0.5rem 1.2rem;
+        transition: all 0.4s ease;
+        padding: 0.6rem 1.5rem;
+        box-shadow: 0 5px 10px rgba(106, 62, 161, 0.1);
     }
 
     .faq-nav .btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 15px rgba(106, 62, 161, 0.15);
+    }
+
+    .faq-nav .btn:active {
+        transform: translateY(-1px);
+    }
+
+    .accordion-item {
+        transition: all 0.4s ease;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .accordion-item:hover {
         transform: translateY(-3px);
     }
 
-    mark {
-        padding: 0.1em 0.2em;
-        border-radius: 3px;
+    /* Animação para mostrar o conteúdo */
+    .accordion-body.animate__fadeIn {
+        animation-duration: 0.6s;
     }
 
-    /* Ícones para categorias */
+    mark {
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+        background-color: rgba(255, 214, 10, 0.3);
+    }
+
+    /* Estilização do ícone de categoria */
     .feature-icon {
         display: inline-flex;
         align-items: center;
@@ -354,21 +509,85 @@
         height: 60px;
         font-size: 1.5rem;
         color: var(--primary);
-        background-color: rgba(106, 62, 161, 0.1);
+        background: linear-gradient(135deg, rgba(106, 62, 161, 0.1) 0%, rgba(154, 109, 215, 0.1) 100%);
         border-radius: 50%;
         margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
+        transition: all 0.4s ease;
+        box-shadow: 0 5px 15px rgba(106, 62, 161, 0.1);
+    }
+
+    .feature-icon:hover {
+        transform: rotateY(180deg);
+        background-color: var(--primary);
+        color: white;
+    }
+
+    /* Efeito de destaque na resposta quando aberta */
+    .accordion-collapse.show .accordion-body {
+        animation: highlightFaq 1.5s ease;
+    }
+
+    @keyframes highlightFaq {
+        0% {
+            background-color: var(--primary-very-light);
+        }
+
+        100% {
+            background-color: #fff;
+        }
+    }
+
+    /* Efeito Ripple nos botões */
+    .accordion-button {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ripple-effect {
+        position: absolute;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.7);
+        width: 100px;
+        height: 100px;
+        margin-top: -50px;
+        margin-left: -50px;
+        animation: ripple 1s;
+        opacity: 0;
+    }
+
+    @keyframes ripple {
+        from {
+            opacity: 1;
+            transform: scale(0);
+        }
+
+        to {
+            opacity: 0;
+            transform: scale(10);
+        }
+    }
+
+    /* Estilização para listas dentro do FAQ */
+    .faq-list {
+        background-color: var(--primary-very-light);
+        border-radius: 10px;
+        padding: 1.2rem 1.2rem 1.2rem 2.5rem;
+    }
+
+    .faq-list li {
+        padding: 0.3rem 0;
     }
 
     /* Ajustes para dispositivos móveis */
     @media (max-width: 768px) {
         .accordion-button {
-            padding: 1rem;
-            font-size: 0.95rem;
+            padding: 1.2rem 1.5rem;
+            font-size: 1rem;
         }
 
         .accordion-body {
-            padding: 1rem;
+            padding: 1.5rem;
+            font-size: 1rem;
         }
 
         .feature-icon {

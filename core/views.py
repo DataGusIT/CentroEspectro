@@ -147,11 +147,14 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, f'Bem-vindo, {user.first_name}!')
                 
                 # Verificar se o usuário é administrador usando os atributos padrão do Django
                 if user.is_staff or user.is_superuser:
-                    return redirect('admin_dashboard')
+                    messages.success(request, f'Bem-vindo, {user.first_name}! Acesso administrativo concedido.')
+                    return redirect('/admin/')
+                else:
+                    # Mensagem de sucesso específica para usuários normais
+                    messages.success(request, f'Bem-vindo, {user.first_name}! Login realizado com sucesso.')
                 
                 # Se não for admin, redireciona para a página solicitada ou para a página inicial
                 next_url = request.GET.get('next', 'index')
@@ -351,7 +354,6 @@ def admin_faq_excluir(request, id):
         'title': 'Excluir FAQ'
     })
 
-# Adicione estas funções ao seu arquivo views.py
 
 # CRUD para Categorias de Contato
 @user_passes_test(is_admin)
@@ -426,9 +428,19 @@ def admin_contato_criar(request):
     if request.method == 'POST':
         nome = request.POST.get('nome')
         descricao = request.POST.get('descricao')
-        imagem_url = request.POST.get('imagem_url')
+        
+        # Tratamento para upload de imagem
+        imagem = request.FILES.get('imagem')
+        
+        # Campos de endereço
+        rua = request.POST.get('rua')
+        numero = request.POST.get('numero')
+        complemento = request.POST.get('complemento')
+        bairro = request.POST.get('bairro')
         cidade = request.POST.get('cidade')
         estado = request.POST.get('estado')
+        cep = request.POST.get('cep')
+        
         telefone = request.POST.get('telefone')
         horario_funcionamento = request.POST.get('horario_funcionamento')
         categoria_id = request.POST.get('categoria')
@@ -440,9 +452,14 @@ def admin_contato_criar(request):
         contato = Contato(
             nome=nome,
             descricao=descricao,
-            imagem_url=imagem_url,
+            imagem=imagem,
+            rua=rua,
+            numero=numero,
+            complemento=complemento,
+            bairro=bairro,
             cidade=cidade,
             estado=estado,
+            cep=cep,
             telefone=telefone,
             horario_funcionamento=horario_funcionamento,
             categoria=categoria,
@@ -467,9 +484,20 @@ def admin_contato_editar(request, id):
     if request.method == 'POST':
         contato.nome = request.POST.get('nome')
         contato.descricao = request.POST.get('descricao')
-        contato.imagem_url = request.POST.get('imagem_url')
+        
+        # Tratamento para upload de imagem
+        if 'imagem' in request.FILES:
+            contato.imagem = request.FILES['imagem']
+        
+        # Campos de endereço
+        contato.rua = request.POST.get('rua')
+        contato.numero = request.POST.get('numero')
+        contato.complemento = request.POST.get('complemento')
+        contato.bairro = request.POST.get('bairro')
         contato.cidade = request.POST.get('cidade')
         contato.estado = request.POST.get('estado')
+        contato.cep = request.POST.get('cep')
+        
         contato.telefone = request.POST.get('telefone')
         contato.horario_funcionamento = request.POST.get('horario_funcionamento')
         

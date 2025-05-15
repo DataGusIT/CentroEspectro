@@ -119,8 +119,8 @@
         <!-- Contatos por Categoria -->
         {% for categoria_nome, contatos_list in contatos_por_categoria.items %}
         <div class="contato-category mb-5" id="{{ categoria_nome|lower|slugify }}">
-            <div class="d-flex align-items-center mb-4">
-                <div class="category-icon me-3">
+            <div class="category-header">
+                <div class="category-icon">
                     <i class="fas fa-building text-primary fs-3"></i>
                 </div>
                 <h3 class="mb-0">{{ categoria_nome }}</h3>
@@ -128,7 +128,7 @@
 
             <div class="row g-4">
                 {% for contato in contatos_list %}
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 contato-item">
                     <div class="card h-100 border-0 shadow-sm hover-card">
                         <div class="card-img-top position-relative">
                             {% if contato.imagem %}
@@ -143,14 +143,16 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="card-title mb-0">{{ contato.nome }}</h5>
                             </div>
-                            <p class="card-text text-muted mb-3">{{ contato.descricao|truncatechars:100 }}</p>
+                            <p class="card-text text-muted mb-3">{{ contato.descricao|truncatechars:80 }}</p>
 
-                            <!-- Endereço completo -->
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            <!-- Informações de contato -->
+                            <div class="contact-info-item mb-2">
+                                <div class="contact-info-icon">
+                                    <i class="fas fa-map-marker-alt text-primary"></i>
+                                </div>
                                 <small>
                                     {% if contato.rua %}
                                     {{ contato.rua }}{% if contato.numero %}, {{ contato.numero }}{% endif %}
@@ -161,15 +163,22 @@
                                 </small>
                             </div>
 
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-phone text-primary me-2"></i>
+                            <div class="contact-info-item mb-2">
+                                <div class="contact-info-icon">
+                                    <i class="fas fa-phone text-primary"></i>
+                                </div>
                                 <small>{{ contato.telefone }}</small>
                             </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-clock text-primary me-2"></i>
+
+                            <div class="contact-info-item mb-3">
+                                <div class="contact-info-icon">
+                                    <i class="fas fa-clock text-primary"></i>
+                                </div>
                                 <small>{{ contato.horario_funcionamento }}</small>
                             </div>
-                            <div class="d-flex justify-content-between">
+
+                            <!-- Área de ações do card -->
+                            <div class="card-action-area">
                                 <span>
                                     {% if contato.atendimento_presencial %}
                                     <span class="badge bg-success me-1"><i
@@ -179,15 +188,14 @@
                                     <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>
                                     {% endif %}
                                 </span>
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                    data-bs-target="#contatoModal{{ contato.id }}">
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-ver-detalhes"
+                                    data-bs-toggle="modal" data-bs-target="#contatoModal{{ contato.id }}">
                                     Ver detalhes
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-
 
                 <!-- Modal com detalhes completos do contato -->
                 <div class="modal fade" id="contatoModal{{ contato.id }}" tabindex="-1"
@@ -265,12 +273,12 @@
         <!-- Call to Action -->
         <div class="row mt-5">
             <div class="col-lg-8 mx-auto">
-                <div class="card bg-primary text-white border-0 shadow">
-                    <div class="card-body p-5 text-center">
+                <div class="card cta-card border-0 shadow">
+                    <div class="card-body p-5 text-center text-white">
                         <h4 class="mb-3">Conhece algum profissional ou instituição especializada?</h4>
                         <p class="mb-4">Ajude a ampliar nossa rede de apoio indicando contatos que possam auxiliar
                             famílias e pessoas com TEA.</p>
-                        <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal"
+                        <button type="button" class="btn cta-btn" data-bs-toggle="modal"
                             data-bs-target="#sugerirContatoModal">
                             <i class="fas fa-plus-circle me-2"></i>Sugerir contato
                         </button>
@@ -493,4 +501,298 @@
         );
     });
 </script>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    /* Estilo para a navegação por categorias */
+    .contact-nav {
+        margin-bottom: 2rem;
+        padding: 0.8rem;
+        background-color: rgba(106, 62, 161, 0.05);
+        border-radius: 15px;
+    }
+
+    .contact-nav .btn {
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        transition: all 0.4s ease;
+    }
+
+    .contact-nav .btn:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: all 0.6s ease;
+        z-index: -1;
+    }
+
+    .contact-nav .btn:hover:before {
+        left: 100%;
+    }
+
+    /* Estilo para os cards de contato */
+    .hover-card {
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .hover-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(106, 62, 161, 0.15);
+    }
+
+    .hover-card:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+        z-index: 2;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+
+    .hover-card:hover:before {
+        transform: scaleX(1);
+    }
+
+    .hover-card .card-img-top {
+        transition: all 0.5s ease;
+    }
+
+    .hover-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .hover-card .card-body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 1.5rem;
+    }
+
+    .hover-card .badge {
+        transform: translateY(0);
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(106, 62, 161, 0.2);
+    }
+
+    .hover-card:hover .badge {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(106, 62, 161, 0.3);
+    }
+
+    /* Padronização do botão "Ver detalhes" */
+    .card-action-area {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .btn-ver-detalhes {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .btn-ver-detalhes:hover {
+        background-color: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(106, 62, 161, 0.3);
+    }
+
+    /* Ícones de informação com animação */
+    .contact-info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.8rem;
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .contact-info-icon {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        color: var(--primary);
+        transition: all 0.3s ease;
+    }
+
+    .hover-card:hover .contact-info-icon {
+        transform: translateY(-50%) scale(1.2);
+    }
+
+    /* Animação para entrada dos cards */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .contato-item {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+    }
+
+    .contato-item:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .contato-item:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+
+    .contato-item:nth-child(4) {
+        animation-delay: 0.3s;
+    }
+
+    .contato-item:nth-child(5) {
+        animation-delay: 0.4s;
+    }
+
+    .contato-item:nth-child(6) {
+        animation-delay: 0.5s;
+    }
+
+    /* Estilo para cabeçalho de categoria */
+    .category-header {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(45deg, var(--primary-very-light), white);
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(106, 62, 161, 0.1);
+        transform: translateY(0);
+        transition: all 0.3s ease;
+    }
+
+    .category-header:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(106, 62, 161, 0.15);
+    }
+
+    .category-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        background-color: white;
+        border-radius: 50%;
+        box-shadow: 0 5px 15px rgba(106, 62, 161, 0.15);
+        margin-right: 1.5rem;
+    }
+
+    /* Estilo para modal */
+    .contato-modal .modal-content {
+        border-radius: 20px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+    }
+
+    .contato-modal .modal-header {
+        background: linear-gradient(45deg, var(--primary), var(--primary-light));
+        color: white;
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+
+    .contato-modal .modal-title {
+        font-weight: 600;
+    }
+
+    .contato-modal .modal-body {
+        padding: 2rem;
+    }
+
+    .contato-modal .modal-footer {
+        border-top: none;
+        padding: 1rem 2rem 2rem;
+    }
+
+    .contato-modal .btn-close {
+        color: white;
+        opacity: 1;
+        text-shadow: none;
+    }
+
+    .contato-modal .contact-details div {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .contato-modal .contact-details div:last-child {
+        border-bottom: none;
+    }
+
+    /* Call to action com efeito gradiente */
+    .cta-card {
+        border-radius: 20px;
+        overflow: hidden;
+        background: linear-gradient(45deg, var(--primary), var(--primary-light));
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-card:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,0.1)' fill-rule='evenodd'/%3E%3C/svg%3E");
+        z-index: -1;
+    }
+
+    .cta-btn {
+        background-color: white;
+        color: var(--primary);
+        font-weight: 600;
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .cta-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+</style>
 {% endblock %}

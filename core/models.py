@@ -54,8 +54,7 @@ class Contato(models.Model):
     nome = models.CharField(max_length=200)
     descricao = models.TextField()
     # Alteração: Substituir campo imagem_url por ImageField
-    imagem = models.ImageField(upload_to='contatos/', blank=True, null=True)
-    
+    imagem = models.ImageField(upload_to='static/img/', blank=True, null=True)    
     # Campos de endereço melhorados
     rua = models.CharField(max_length=200, blank=True, null=True)
     numero = models.CharField(max_length=20, blank=True, null=True)
