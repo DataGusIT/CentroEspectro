@@ -101,44 +101,66 @@
                 </p>
             </div>
         </div>
-        {% if contatos_clinicas %}
-        <div class="contato-category mb-5" id="clinicas">
+
+        {% if contatos_por_categoria %}
+        <!-- Contatos Categories Nav -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav class="contact-nav d-flex justify-content-center flex-wrap">
+                    {% for categoria_nome in contatos_por_categoria.keys %}
+                    <a href="#{{ categoria_nome|lower|slugify }}" class="btn btn-sm btn-outline-primary m-1">
+                        {{ categoria_nome }}
+                    </a>
+                    {% endfor %}
+                </nav>
+            </div>
+        </div>
+
+        <!-- Contatos por Categoria -->
+        {% for categoria_nome, contatos_list in contatos_por_categoria.items %}
+        <div class="contato-category mb-5" id="{{ categoria_nome|lower|slugify }}">
             <div class="d-flex align-items-center mb-4">
                 <div class="category-icon me-3">
-                    <i class="fas fa-hospital text-primary fs-3"></i>
+                    <i class="fas fa-building text-primary fs-3"></i>
                 </div>
-                <h3 class="mb-0">Clínicas e Centros Especializados</h3>
+                <h3 class="mb-0">{{ categoria_nome }}</h3>
             </div>
+
             <div class="row g-4">
-                {% for contato in contatos_clinicas %}
+                {% for contato in contatos_list %}
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 shadow-sm hover-card">
                         <div class="card-img-top position-relative">
-                            <img src="{{ contato.imagem_url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top"
+                            {% if contato.imagem %}
+                            <img src="{{ contato.imagem.url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top"
                                 style="height: 200px; width: 100%; object-fit: cover;">
+                            {% else %}
+                            <img src="{% static 'img/default-contact.jpg' %}" alt="{{ contato.nome }}"
+                                class="img-fluid rounded-top" style="height: 200px; width: 100%; object-fit: cover;">
+                            {% endif %}
                             <div class="position-absolute bottom-0 start-0 p-3">
-                                <span class="badge bg-primary">{{ contato.get_tipo_display }}</span>
+                                <span class="badge bg-primary">{{ contato.categoria.nome }}</span>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h5 class="card-title mb-0">{{ contato.nome }}</h5>
-                                <div class="rating">
-                                    {% with ''|center:contato.avaliacao|floatformat:"0" as stars %}
-                                    {% for _ in stars %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endfor %}
-                                    {% endwith %}
-                                    {% if contato.avaliacao|floatformat:"1"|slice:"-1:" == "5" %}
-                                    <i class="fas fa-star-half-alt text-warning"></i>
-                                    {% endif %}
-                                </div>
                             </div>
-                            <p class="card-text text-muted mb-3">{{ contato.descricao }}</p>
+                            <p class="card-text text-muted mb-3">{{ contato.descricao|truncatechars:100 }}</p>
+
+                            <!-- Endereço completo -->
                             <div class="d-flex align-items-center mb-2">
                                 <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                <small>{{ contato.cidade }}, {{ contato.estado }}</small>
+                                <small>
+                                    {% if contato.rua %}
+                                    {{ contato.rua }}{% if contato.numero %}, {{ contato.numero }}{% endif %}
+                                    {% if contato.bairro %} - {{ contato.bairro }}{% endif %}<br>
+                                    {% endif %}
+                                    {{ contato.cidade }}, {{ contato.estado }}
+                                    {% if contato.cep %}<br>CEP: {{ contato.cep }}{% endif %}
+                                </small>
                             </div>
+
                             <div class="d-flex align-items-center mb-2">
                                 <i class="fas fa-phone text-primary me-2"></i>
                                 <small>{{ contato.telefone }}</small>
@@ -157,76 +179,65 @@
                                     <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>
                                     {% endif %}
                                 </span>
-                                <a href="{% url 'detalhes_contato' contato.id %}"
-                                    class="btn btn-sm btn-outline-primary">Ver detalhes</a>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                    data-bs-target="#contatoModal{{ contato.id }}">
+                                    Ver detalhes
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
 
-        <!-- Profissionais -->
-        {% if contatos_profissionais %}
-        <div class="contato-category mb-5" id="profissionais">
-            <div class="d-flex align-items-center mb-4">
-                <div class="category-icon me-3">
-                    <i class="fas fa-user-md text-primary fs-3"></i>
-                </div>
-                <h3 class="mb-0">Profissionais Especializados</h3>
-            </div>
-            <div class="row g-4">
-                {% for contato in contatos_profissionais %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-card">
-                        <div class="card-img-top position-relative">
-                            <img src="{{ contato.imagem_url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top"
-                                style="height: 200px; width: 100%; object-fit: cover;">
-                            <div class="position-absolute bottom-0 start-0 p-3">
-                                <span class="badge bg-primary">{{ contato.get_tipo_display }}</span>
+
+                <!-- Modal com detalhes completos do contato -->
+                <div class="modal fade" id="contatoModal{{ contato.id }}" tabindex="-1"
+                    aria-labelledby="contatoModalLabel{{ contato.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="contatoModalLabel{{ contato.id }}">{{ contato.nome }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="card-title mb-0">{{ contato.nome }}</h5>
-                                <div class="rating">
-                                    {% with ''|center:contato.avaliacao|floatformat:"0" as stars %}
-                                    {% for _ in stars %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endfor %}
-                                    {% endwith %}
-                                    {% if contato.avaliacao|floatformat:"1"|slice:"-1:" == "5" %}
-                                    <i class="fas fa-star-half-alt text-warning"></i>
-                                    {% endif %}
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                                        <img src="{{ contato.imagem_url }}" alt="{{ contato.nome }}"
+                                            class="img-fluid rounded mb-3" style="max-height: 200px;">
+                                        <h6 class="fw-bold">Informações de Contato</h6>
+                                        <div class="d-flex flex-column contact-details">
+                                            <div class="mb-2">
+                                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                                {{ contato.cidade }}, {{ contato.estado }}
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-phone-alt text-primary me-2"></i>
+                                                {{ contato.telefone }}
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-clock text-primary me-2"></i>
+                                                {{ contato.horario_funcionamento }}
+                                            </div>
+                                            <div class="d-flex justify-content-center mt-2">
+                                                {% if contato.atendimento_presencial %}
+                                                <span class="badge bg-success me-2"><i class="fas fa-building me-1"></i>
+                                                    Presencial</span>
+                                                {% endif %}
+                                                {% if contato.atendimento_online %}
+                                                <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>
+                                                    Online</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <h6 class="fw-bold">Descrição</h6>
+                                        <p>{{ contato.descricao|linebreaksbr }}</p>
+                                    </div>
                                 </div>
                             </div>
-                            <p class="card-text text-muted mb-3">{{ contato.descricao }}</p>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                <small>{{ contato.cidade }}, {{ contato.estado }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-phone text-primary me-2"></i>
-                                <small>{{ contato.telefone }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                <small>{{ contato.horario_funcionamento }}</small>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>
-                                    {% if contato.atendimento_presencial %}
-                                    <span class="badge bg-success me-1"><i
-                                            class="fas fa-building me-1"></i>Presencial</span>
-                                    {% endif %}
-                                    {% if contato.atendimento_online %}
-                                    <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>
-                                    {% endif %}
-                                </span>
-                                <a href="{% url 'detalhes_contato' contato.id %}"
-                                    class="btn btn-sm btn-outline-primary">Ver detalhes</a>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                             </div>
                         </div>
                     </div>
@@ -234,286 +245,20 @@
                 {% endfor %}
             </div>
         </div>
-        {% endif %}
+        {% endfor %}
 
-        <!-- Associações -->
-        {% if contatos_associacoes %}
-        <div class="contato-category mb-5" id="associacoes">
-            <div class="d-flex align-items-center mb-4">
-                <div class="category-icon me-3">
-                    <i class="fas fa-hands-helping text-primary fs-3"></i>
+        {% else %}
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="alert alert-info p-4 shadow-sm rounded-3">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h4>Nenhum contato encontrado</h4>
+                    <p class="mb-0">
+                        Não há contatos cadastrados no momento. Entre em contato com o administrador para mais
+                        informações.
+                    </p>
                 </div>
-                <h3 class="mb-0">Associações e ONGs</h3>
             </div>
-            <div class="row g-4">
-                {% for contato in contatos_associacoes %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-card">
-                        <div class="card-img-top position-relative">
-                            <img src="{{ contato.imagem_url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top"
-                                style="height: 200px; width: 100%; object-fit: cover;">
-                            <div class="position-absolute bottom-0 start-0 p-3">
-                                <span class="badge bg-primary">{{ contato.get_tipo_display }}</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="card-title mb-0">{{ contato.nome }}</h5>
-                                <div class="rating">
-                                    {% with ''|center:contato.avaliacao|floatformat:"0" as stars %}
-                                    {% for _ in stars %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endfor %}
-                                    {% endwith %}
-                                    {% if contato.avaliacao|floatformat:"1"|slice:"-1:" == "5" %}
-                                    <i class="fas fa-star-half-alt text-warning"></i>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <p class="card-text text-muted mb-3">{{ contato.descricao }}</p>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                <small>{{ contato.cidade }}, {{ contato.estado }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-phone text-primary me-2"></i>
-                                <small>{{ contato.telefone }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                <small>{{ contato.horario_funcionamento }}</small>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>
-                                    {% if contato.atendimento_presencial %}
-                                    <span class="badge bg-success me-1"><i
-                                            class="fas fa-building me-1"></i>Presencial</span>
-                                    {% endif %}
-                                    {% if contato.atendimento_online %}
-                                    <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>
-                                    {% endif %}
-                                </span>
-                                <a href="{% url 'detalhes_contato' contato.id %}"
-                                    class="btn btn-sm btn-outline-primary">Ver detalhes</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Escolas -->
-        {% if contatos_escolas %}
-        <div class="contato-category mb-5" id="escolas">
-            <div class="d-flex align-items-center mb-4">
-                <div class="category-icon me-3">
-                    <i class="fas fa-school text-primary fs-3"></i>
-                </div>
-                <h3 class="mb-0">Escolas e Centros Educacionais</h3>
-            </div>
-            <div class="row g-4">
-                {% for contato in contatos_escolas %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-card">
-                        <div class="card-img-top position-relative">
-                            <img src="{{ contato.imagem_url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top"
-                                style="height: 200px; width: 100%; object-fit: cover;">
-                            <div class="position-absolute bottom-0 start-0 p-3">
-                                <span class="badge bg-primary">{{ contato.get_tipo_display }}</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="card-title mb-0">{{ contato.nome }}</h5>
-                                <div class="rating">
-                                    {% with ''|center:contato.avaliacao|floatformat:"0" as stars %}
-                                    {% for _ in stars %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endfor %}
-                                    {% endwith %}
-                                    {% if contato.avaliacao|floatformat:"1"|slice:"-1:" == "5" %}
-                                    <i class="fas fa-star-half-alt text-warning"></i>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <p class="card-text text-muted mb-3">{{ contato.descricao }}</p>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                <small>{{ contato.cidade }}, {{ contato.estado }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-phone text-primary me-2"></i>
-                                <small>{{ contato.telefone }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                <small>{{ contato.horario_funcionamento }}</small>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>
-                                    {% if contato.atendimento_presencial %}
-                                    <span class="badge bg-success me-1"><i
-                                            class="fas fa-building me-1"></i>Presencial</span>
-                                    {% endif %}
-                                    {% if contato.atendimento_online %}
-                                    <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>
-                                    {% endif %}
-                                </span>
-                                <a href="{% url 'detalhes_contato' contato.id %}"
-                                    class="btn btn-sm btn-outline-primary">Ver detalhes</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Grupos de Apoio -->
-        {% if contatos_apoio %}
-        <div class="contato-category mb-5" id="apoio">
-            <div class="d-flex align-items-center mb-4">
-                <div class="category-icon me-3">
-                    <i class="fas fa-users text-primary fs-3"></i>
-                </div>
-                <h3 class="mb-0">Grupos de Apoio</h3>
-            </div>
-            <div class="row g-4">
-                {% for contato in contatos_apoio %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-card">
-                        <div class="card-img-top position-relative">
-                            <img src="{{ contato.imagem_url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top"
-                                style="height: 200px; width: 100%; object-fit: cover;">
-                            <div class="position-absolute bottom-0 start-0 p-3">
-                                <span class="badge bg-primary">{{ contato.get_tipo_display }}</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="card-title mb-0">{{ contato.nome }}</h5>
-                                <div class="rating">
-                                    {% with ''|center:contato.avaliacao|floatformat:"0" as stars %}
-                                    {% for _ in stars %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endfor %}
-                                    {% endwith %}
-                                    {% if contato.avaliacao|floatformat:"1"|slice:"-1:" == "5" %}
-                                    <i class="fas fa-star-half-alt text-warning"></i>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <p class="card-text text-muted mb-3">{{ contato.descricao }}</p>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                <small>{{ contato.cidade }}, {{ contato.estado }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-phone text-primary me-2"></i>
-                                <small>{{ contato.telefone }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                <small>{{ contato.horario_funcionamento }}</small>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>
-                                    {% if contato.atendimento_presencial %}
-                                    <span class="badge bg-success me-1"><i
-                                            class="fas fa-building me-1"></i>Presencial</span>
-                                    {% endif %}
-                                    {% if contato.atendimento_online %}
-                                    <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>
-                                    {% endif %}
-                                </span>
-                                <a href="{% url 'detalhes_contato' contato.id %}"
-                                    class="btn btn-sm btn-outline-primary">Ver detalhes</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Serviços de Emergência -->
-        {% if contatos_emergencia %}
-        <div class="contato-category mb-5" id="emergencia">
-            <div class="d-flex align-items-center mb-4">
-                <div class="category-icon me-3">
-                    <i class="fas fa-phone-alt text-primary fs-3"></i>
-                </div>
-                <h3 class="mb-0">Serviços de Emergência</h3>
-            </div>
-            <div class="row g-4">
-                {% for contato in contatos_emergencia %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-card">
-                        <div class="card-img-top position-relative">
-                            <img src="{{ contato.imagem_url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top"
-                                style="height: 200px; width: 100%; object-fit: cover;">
-                            <div class="position-absolute bottom-0 start-0 p-3">
-                                <span class="badge bg-primary">{{ contato.get_tipo_display }}</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="card-title mb-0">{{ contato.nome }}</h5>
-                                <div class="rating">
-                                    {% with ''|center:contato.avaliacao|floatformat:"0" as stars %}
-                                    {% for _ in stars %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endfor %}
-                                    {% endwith %}
-                                    {% if contato.avaliacao|floatformat:"1"|slice:"-1:" == "5" %}
-                                    <i class="fas fa-star-half-alt text-warning"></i>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <p class="card-text text-muted mb-3">{{ contato.descricao }}</p>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                <small>{{ contato.cidade }}, {{ contato.estado }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-phone text-primary me-2"></i>
-                                <small>{{ contato.telefone }}</small>
-                            </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                <small>{{ contato.horario_funcionamento }}</small>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>
-                                    {% if contato.atendimento_presencial %}
-                                    <span class="badge bg-success me-1"><i
-                                            class="fas fa-building me-1"></i>Presencial</span>
-                                    {% endif %}
-                                    {% if contato.atendimento_online %}
-                                    <span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>
-                                    {% endif %}
-                                </span>
-                                <a href="{% url 'detalhes_contato' contato.id %}"
-                                    class="btn btn-sm btn-outline-primary">Ver detalhes</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Se nenhum contato estiver disponível -->
-        {% if sem_contatos %}
-        <div class="alert alert-info text-center py-5">
-            <i class="fas fa-info-circle fa-3x mb-3"></i>
-            <h4>Nenhum contato disponível no momento</h4>
-            <p>Estamos trabalhando para adicionar contatos especializados em breve.</p>
         </div>
         {% endif %}
 
@@ -533,219 +278,219 @@
                 </div>
             </div>
         </div>
-        {% endblock %}
+    </div>
+</section>
 
-        <!-- Modal Sugerir Contato -->
-        {% block modals %}
-        <div class="modal fade" id="sugerirContatoModal" tabindex="-1" aria-labelledby="sugerirContatoModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="sugerirContatoModalLabel">Sugerir um contato</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <p class="text-muted mb-4">Preencha os dados do contato que você deseja sugerir para nossa rede
-                            de apoio. Após análise, o contato poderá ser adicionado à nossa base de dados.</p>
-                        <form id="formSugerirContato" method="post" action="{% url 'sugerir_contato' %}">
-                            {% csrf_token %}
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Nome do contato</label>
-                                    <input type="text" name="nome" class="form-control"
-                                        placeholder="Nome da instituição ou profissional" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Tipo do contato</label>
-                                    <select name="tipo" class="form-select" required>
-                                        <option value="">Selecione o tipo</option>
-                                        <option value="clinica">Clínica</option>
-                                        <option value="profissional">Profissional</option>
-                                        <option value="associacao">Associação</option>
-                                        <option value="escola">Escola</option>
-                                        <option value="apoio">Grupo de Apoio</option>
-                                        <option value="emergencia">Serviço de Emergência</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Descrição</label>
-                                    <textarea name="descricao" class="form-control" rows="3"
-                                        placeholder="Descreva brevemente os serviços oferecidos" required></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Telefone</label>
-                                    <input type="tel" name="telefone" class="form-control"
-                                        placeholder="(00) 00000-0000">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">E-mail</label>
-                                    <input type="email" name="email" class="form-control"
-                                        placeholder="contato@exemplo.com">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Website</label>
-                                    <input type="url" name="website" class="form-control"
-                                        placeholder="https://www.exemplo.com.br">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Cidade</label>
-                                    <input type="text" name="cidade" class="form-control" placeholder="Cidade">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Estado</label>
-                                    <select name="estado" class="form-select">
-                                        <option value="">Selecione o estado</option>
-                                        <option value="AC">Acre</option>
-                                        <option value="AL">Alagoas</option>
-                                        <option value="AP">Amapá</option>
-                                        <option value="AM">Amazonas</option>
-                                        <option value="BA">Bahia</option>
-                                        <option value="CE">Ceará</option>
-                                        <option value="DF">Distrito Federal</option>
-                                        <option value="ES">Espírito Santo</option>
-                                        <option value="GO">Goiás</option>
-                                        <option value="MA">Maranhão</option>
-                                        <option value="MT">Mato Grosso</option>
-                                        <option value="MS">Mato Grosso do Sul</option>
-                                        <option value="MG">Minas Gerais</option>
-                                        <option value="PA">Pará</option>
-                                        <option value="PB">Paraíba</option>
-                                        <option value="PR">Paraná</option>
-                                        <option value="PE">Pernambuco</option>
-                                        <option value="PI">Piauí</option>
-                                        <option value="RJ">Rio de Janeiro</option>
-                                        <option value="RN">Rio Grande do Norte</option>
-                                        <option value="RS">Rio Grande do Sul</option>
-                                        <option value="RO">Rondônia</option>
-                                        <option value="RR">Roraima</option>
-                                        <option value="SC">Santa Catarina</option>
-                                        <option value="SP">São Paulo</option>
-                                        <option value="SE">Sergipe</option>
-                                        <option value="TO">Tocantins</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Endereço</label>
-                                    <input type="text" name="endereco" class="form-control"
-                                        placeholder="Rua, número, bairro">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Horário de funcionamento</label>
-                                    <input type="text" name="horario_funcionamento" class="form-control"
-                                        placeholder="Ex: Segunda a Sexta: 8h às 18h">
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="atendimento_presencial"
-                                            id="atendimentoPresencial">
-                                        <label class="form-check-label" for="atendimentoPresencial">Atendimento
-                                            Presencial</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="atendimento_online"
-                                            id="atendimentoOnline">
-                                        <label class="form-check-label" for="atendimentoOnline">Atendimento
-                                            Online</label>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Seu nome</label>
-                                    <input type="text" name="seu_nome" class="form-control"
-                                        placeholder="Seu nome completo" required>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Seu e-mail</label>
-                                    <input type="email" name="seu_email" class="form-control"
-                                        placeholder="seu.email@exemplo.com" required>
-                                </div>
+{% endblock %}
+
+<!-- Modal Sugerir Contato -->
+{% block modals %}
+<div class="modal fade" id="sugerirContatoModal" tabindex="-1" aria-labelledby="sugerirContatoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="sugerirContatoModalLabel">Sugerir um contato</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">Preencha os dados do contato que você deseja sugerir para nossa rede
+                    de apoio. Após análise, o contato poderá ser adicionado à nossa base de dados.</p>
+                <form id="formSugerirContato" method="post" action="{% url 'sugerir_contato' %}">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nome do contato</label>
+                            <input type="text" name="nome" class="form-control"
+                                placeholder="Nome da instituição ou profissional" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo do contato</label>
+                            <select name="tipo" class="form-select" required>
+                                <option value="">Selecione o tipo</option>
+                                <option value="clinica">Clínica</option>
+                                <option value="profissional">Profissional</option>
+                                <option value="associacao">Associação</option>
+                                <option value="escola">Escola</option>
+                                <option value="apoio">Grupo de Apoio</option>
+                                <option value="emergencia">Serviço de Emergência</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Descrição</label>
+                            <textarea name="descricao" class="form-control" rows="3"
+                                placeholder="Descreva brevemente os serviços oferecidos" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefone</label>
+                            <input type="tel" name="telefone" class="form-control" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" name="email" class="form-control" placeholder="contato@exemplo.com">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Website</label>
+                            <input type="url" name="website" class="form-control"
+                                placeholder="https://www.exemplo.com.br">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" name="cidade" class="form-control" placeholder="Cidade">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select">
+                                <option value="">Selecione o estado</option>
+                                <option value="AC">Acre</option>
+                                <option value="AL">Alagoas</option>
+                                <option value="AP">Amapá</option>
+                                <option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option>
+                                <option value="CE">Ceará</option>
+                                <option value="DF">Distrito Federal</option>
+                                <option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option>
+                                <option value="MA">Maranhão</option>
+                                <option value="MT">Mato Grosso</option>
+                                <option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option>
+                                <option value="PA">Pará</option>
+                                <option value="PB">Paraíba</option>
+                                <option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option>
+                                <option value="PI">Piauí</option>
+                                <option value="RJ">Rio de Janeiro</option>
+                                <option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option>
+                                <option value="RO">Rondônia</option>
+                                <option value="RR">Roraima</option>
+                                <option value="SC">Santa Catarina</option>
+                                <option value="SP">São Paulo</option>
+                                <option value="SE">Sergipe</option>
+                                <option value="TO">Tocantins</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" name="endereco" class="form-control" placeholder="Rua, número, bairro">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Horário de funcionamento</label>
+                            <input type="text" name="horario_funcionamento" class="form-control"
+                                placeholder="Ex: Segunda a Sexta: 8h às 18h">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="atendimento_presencial"
+                                    id="atendimentoPresencial">
+                                <label class="form-check-label" for="atendimentoPresencial">Atendimento
+                                    Presencial</label>
                             </div>
-                        </form>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="atendimento_online"
+                                    id="atendimentoOnline">
+                                <label class="form-check-label" for="atendimentoOnline">Atendimento
+                                    Online</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Seu nome</label>
+                            <input type="text" name="seu_nome" class="form-control" placeholder="Seu nome completo"
+                                required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Seu e-mail</label>
+                            <input type="email" name="seu_email" class="form-control"
+                                placeholder="seu.email@exemplo.com" required>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="btnEnviarSugestao">
-                            <i class="fas fa-paper-plane me-2"></i>Enviar sugestão
-                        </button>
-                    </div>
-                </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnEnviarSugestao">
+                    <i class="fas fa-paper-plane me-2"></i>Enviar sugestão
+                </button>
             </div>
         </div>
-        {% endblock %}
+    </div>
+</div>
+{% endblock %}
 
-        {% block scripts %}
-        <script>
-            $(document).ready(function () {
-                // Função para filtrar os contatos baseado nos critérios selecionados
-                $("#btnFiltrar").click(function () {
-                    const tipoFiltro = $("#filtroTipo").val();
-                    const atendimentoFiltro = $("#filtroAtendimento").val();
-                    const localizacaoFiltro = $("#filtroLocalizacao").val();
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Função para filtrar os contatos baseado nos critérios selecionados
+        $("#btnFiltrar").click(function () {
+            const tipoFiltro = $("#filtroTipo").val();
+            const atendimentoFiltro = $("#filtroAtendimento").val();
+            const localizacaoFiltro = $("#filtroLocalizacao").val();
 
-                    // Construir a URL de filtro
-                    let url = "{% url 'contatos' %}?";
-                    if (tipoFiltro && tipoFiltro !== "todos") {
-                        url += `tipo=${tipoFiltro}&`;
-                    }
-                    if (atendimentoFiltro && atendimentoFiltro !== "todos") {
-                        url += `atendimento=${atendimentoFiltro}&`;
-                    }
-                    if (localizacaoFiltro && localizacaoFiltro !== "todos") {
-                        url += `localizacao=${localizacaoFiltro}&`;
-                    }
+            // Construir a URL de filtro
+            let url = "{% url 'contatos' %}?";
+            if (tipoFiltro && tipoFiltro !== "todos") {
+                url += `tipo=${tipoFiltro}&`;
+            }
+            if (atendimentoFiltro && atendimentoFiltro !== "todos") {
+                url += `atendimento=${atendimentoFiltro}&`;
+            }
+            if (localizacaoFiltro && localizacaoFiltro !== "todos") {
+                url += `localizacao=${localizacaoFiltro}&`;
+            }
 
-                    // Redirecionar para a URL com filtros
-                    window.location.href = url;
-                });
+            // Redirecionar para a URL com filtros
+            window.location.href = url;
+        });
 
-                // Limpar filtros
-                $("#btnLimpar").click(function () {
-                    window.location.href = "{% url 'contatos' %}";
-                });
+        // Limpar filtros
+        $("#btnLimpar").click(function () {
+            window.location.href = "{% url 'contatos' %}";
+        });
 
-                // Enviar sugestão
-                $("#btnEnviarSugestao").click(function () {
-                    // Validar formulário
-                    if ($("#formSugerirContato")[0].checkValidity()) {
-                        // Enviar o formulário
-                        $("#formSugerirContato").submit();
+        // Enviar sugestão
+        $("#btnEnviarSugestao").click(function () {
+            // Validar formulário
+            if ($("#formSugerirContato")[0].checkValidity()) {
+                // Enviar o formulário
+                $("#formSugerirContato").submit();
 
-                        // Fechar o modal e exibir mensagem de sucesso
-                        $("#sugerirContatoModal").modal('hide');
+                // Fechar o modal e exibir mensagem de sucesso
+                $("#sugerirContatoModal").modal('hide');
 
-                        // Exibir mensagem de sucesso (usando SweetAlert2 se disponível)
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Sugestão enviada!',
-                                text: 'Agradecemos sua contribuição para nossa rede de apoio.',
-                                confirmButtonColor: '#3085d6'
-                            });
-                        } else {
-                            alert('Sugestão enviada! Agradecemos sua contribuição para nossa rede de apoio.');
-                        }
+                // Exibir mensagem de sucesso (usando SweetAlert2 se disponível)
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sugestão enviada!',
+                        text: 'Agradecemos sua contribuição para nossa rede de apoio.',
+                        confirmButtonColor: '#3085d6'
+                    });
+                } else {
+                    alert('Sugestão enviada! Agradecemos sua contribuição para nossa rede de apoio.');
+                }
 
-                        // Limpar formulário
-                        $("#formSugerirContato")[0].reset();
-                    } else {
-                        // Forçar validação visual dos campos
-                        $("#formSugerirContato")[0].reportValidity();
-                    }
-                });
+                // Limpar formulário
+                $("#formSugerirContato")[0].reset();
+            } else {
+                // Forçar validação visual dos campos
+                $("#formSugerirContato")[0].reportValidity();
+            }
+        });
 
-                // Efeito hover nos cards
-                $(".hover-card").hover(
-                    function () {
-                        $(this).addClass("shadow");
-                        $(this).css("transform", "translateY(-5px)");
-                        $(this).css("transition", "all 0.3s ease");
-                    },
-                    function () {
-                        $(this).removeClass("shadow");
-                        $(this).css("transform", "translateY(0)");
-                    }
-                );
-            });
-        </script>
-        {% endblock %}
+        // Efeito hover nos cards
+        $(".hover-card").hover(
+            function () {
+                $(this).addClass("shadow");
+                $(this).css("transform", "translateY(-5px)");
+                $(this).css("transition", "all 0.3s ease");
+            },
+            function () {
+                $(this).removeClass("shadow");
+                $(this).css("transform", "translateY(0)");
+            }
+        );
+    });
+</script>
+{% endblock %}

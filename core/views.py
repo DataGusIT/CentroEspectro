@@ -83,36 +83,28 @@ def pesquisar_faqs(request):
     return redirect('duvidas')
 
 def contatos(request):
-    # Busca todos os contatos agrupados por tipo
-    contatos_clinicas = Contato.objects.filter(tipo='CLINICA')
-    contatos_profissionais = Contato.objects.filter(tipo='PROFISSIONAL')
-    contatos_associacoes = Contato.objects.filter(tipo='ASSOCIACAO')
-    contatos_escolas = Contato.objects.filter(tipo='ESCOLA')
-    contatos_apoio = Contato.objects.filter(tipo='GRUPO_APOIO')
-    contatos_emergencia = Contato.objects.filter(tipo='EMERGENCIA')
+    # Busca todas as categorias disponíveis
+    categorias = CategoriaContato.objects.all()
     
-    # Lógica para saber se está tudo vazio
-    sem_contatos = not (
-        contatos_clinicas.exists() or 
-        contatos_profissionais.exists() or 
-        contatos_associacoes.exists() or 
-        contatos_escolas.exists() or 
-        contatos_apoio.exists() or 
-        contatos_emergencia.exists()
-    )
-
+    # Cria um dicionário para armazenar contatos por categoria
+    contatos_por_categoria = {}
+    
+    # Para cada categoria, busca os contatos correspondentes
+    for categoria in categorias:
+        contatos_categoria = Contato.objects.filter(categoria=categoria)
+        if contatos_categoria.exists():
+            contatos_por_categoria[categoria.nome] = contatos_categoria
+    
+    # Verifica se não há contatos cadastrados
+    sem_contatos = not contatos_por_categoria
+    
     context = {
         'title': 'Contatos',
-        'contatos_clinicas': contatos_clinicas,
-        'contatos_profissionais': contatos_profissionais,
-        'contatos_associacoes': contatos_associacoes,
-        'contatos_escolas': contatos_escolas,
-        'contatos_apoio': contatos_apoio,
-        'contatos_emergencia': contatos_emergencia,
+        'contatos_por_categoria': contatos_por_categoria,
         'sem_contatos': sem_contatos,
     }
     
-    return render(request, 'core/contatos.html', context)
+    return render(request, 'core/contatos.html', context)   
 
 
 def detalhes_contato(request, id):
@@ -429,6 +421,8 @@ def admin_contatos(request):
 
 @user_passes_test(is_admin)
 def admin_contato_criar(request):
+    categorias = CategoriaContato.objects.all()
+    
     if request.method == 'POST':
         nome = request.POST.get('nome')
         descricao = request.POST.get('descricao')
@@ -437,9 +431,11 @@ def admin_contato_criar(request):
         estado = request.POST.get('estado')
         telefone = request.POST.get('telefone')
         horario_funcionamento = request.POST.get('horario_funcionamento')
-        tipo = request.POST.get('tipo')
+        categoria_id = request.POST.get('categoria')
         atendimento_presencial = 'atendimento_presencial' in request.POST
         atendimento_online = 'atendimento_online' in request.POST
+        
+        categoria = get_object_or_404(CategoriaContato, id=categoria_id) if categoria_id else None
         
         contato = Contato(
             nome=nome,
@@ -449,7 +445,7 @@ def admin_contato_criar(request):
             estado=estado,
             telefone=telefone,
             horario_funcionamento=horario_funcionamento,
-            tipo=tipo,
+            categoria=categoria,
             atendimento_presencial=atendimento_presencial,
             atendimento_online=atendimento_online
         )
@@ -460,12 +456,13 @@ def admin_contato_criar(request):
     
     return render(request, 'core/admin/contato_form.html', {
         'title': 'Novo Contato',
-        'tipos': Contato.TIPO_CHOICES
+        'categorias': categorias
     })
 
 @user_passes_test(is_admin)
 def admin_contato_editar(request, id):
     contato = get_object_or_404(Contato, id=id)
+    categorias = CategoriaContato.objects.all()
     
     if request.method == 'POST':
         contato.nome = request.POST.get('nome')
@@ -475,7 +472,10 @@ def admin_contato_editar(request, id):
         contato.estado = request.POST.get('estado')
         contato.telefone = request.POST.get('telefone')
         contato.horario_funcionamento = request.POST.get('horario_funcionamento')
-        contato.tipo = request.POST.get('tipo')
+        
+        categoria_id = request.POST.get('categoria')
+        contato.categoria = get_object_or_404(CategoriaContato, id=categoria_id) if categoria_id else None
+        
         contato.atendimento_presencial = 'atendimento_presencial' in request.POST
         contato.atendimento_online = 'atendimento_online' in request.POST
         contato.save()
@@ -486,7 +486,7 @@ def admin_contato_editar(request, id):
     return render(request, 'core/admin/contato_form.html', {
         'contato': contato,
         'title': 'Editar Contato',
-        'tipos': Contato.TIPO_CHOICES
+        'categorias': categorias
     })
 
 @user_passes_test(is_admin)

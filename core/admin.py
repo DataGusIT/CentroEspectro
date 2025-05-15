@@ -27,9 +27,23 @@ class FAQAdmin(admin.ModelAdmin):
 
 @admin.register(Contato)
 class ContatoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'tipo', 'cidade', 'estado', 'telefone', 'avaliacao')
-    list_filter = ('tipo', 'estado', 'atendimento_presencial', 'atendimento_online')
-    search_fields = ('nome', 'descricao', 'cidade')
+    list_display = ('nome', 'categoria', 'cidade', 'estado', 'telefone')
+    list_filter = ('categoria', 'estado', 'atendimento_presencial', 'atendimento_online')
+    search_fields = ('nome', 'descricao', 'cidade', 'rua', 'bairro', 'cep')
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('nome', 'descricao', 'imagem', 'categoria')
+        }),
+        ('Endereço', {
+            'fields': ('rua', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep')
+        }),
+        ('Contato', {
+            'fields': ('telefone', 'horario_funcionamento')
+        }),
+        ('Tipo de Atendimento', {
+            'fields': ('atendimento_presencial', 'atendimento_online')
+        }),
+    )
 
 @admin.register(Ferramenta)
 class FerramentaAdmin(admin.ModelAdmin):

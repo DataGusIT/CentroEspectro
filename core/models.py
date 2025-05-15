@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 # Categoria base (abstrata)
 class CategoriaBase(models.Model):
     nome = models.CharField(max_length=100)
-    icone = models.CharField(max_length=50, default='fas fa-question-circle')
+    icone = models.CharField(max_length=50, blank=True, null=True)  # Removido o valor default
     
     class Meta:
         abstract = True
@@ -51,30 +51,45 @@ class FAQ(models.Model):
         return self.pergunta
 
 class Contato(models.Model):
-    TIPO_CHOICES = [
-        ('CLINICA', 'Clínica'),
-        ('PROFISSIONAL', 'Profissional'),
-        ('ASSOCIACAO', 'Associação'),
-        ('ESCOLA', 'Escola'),
-        ('GRUPO_APOIO', 'Grupo de Apoio'),
-        ('EMERGENCIA', 'Emergência')
-    ]
-    
     nome = models.CharField(max_length=200)
     descricao = models.TextField()
-    imagem_url = models.CharField(max_length=255)
+    # Alteração: Substituir campo imagem_url por ImageField
+    imagem = models.ImageField(upload_to='contatos/', blank=True, null=True)
+    
+    # Campos de endereço melhorados
+    rua = models.CharField(max_length=200, blank=True, null=True)
+    numero = models.CharField(max_length=20, blank=True, null=True)
+    complemento = models.CharField(max_length=100, blank=True, null=True)
+    bairro = models.CharField(max_length=100, blank=True, null=True)
     cidade = models.CharField(max_length=100)
     estado = models.CharField(max_length=50)
+    cep = models.CharField(max_length=9, blank=True, null=True)  # Formato: 00000-000
+    
     telefone = models.CharField(max_length=20)
     horario_funcionamento = models.CharField(max_length=100)
-    avaliacao = models.DecimalField(max_digits=3, decimal_places=1, default=0.0)
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    categoria = models.ForeignKey(CategoriaContato, on_delete=models.CASCADE, related_name='contatos', null=True, blank=True)
     atendimento_presencial = models.BooleanField(default=True)
     atendimento_online = models.BooleanField(default=False)
-    
+
     def __str__(self):
         return self.nome
     
+    def endereco_completo(self):
+        """Retorna o endereço completo formatado"""
+        endereco = []
+        if self.rua:
+            endereco.append(f"{self.rua}")
+            if self.numero:
+                endereco[-1] += f", {self.numero}"
+        if self.complemento:
+            endereco.append(self.complemento)
+        if self.bairro:
+            endereco.append(self.bairro)
+        endereco.append(f"{self.cidade}, {self.estado}")
+        if self.cep:
+            endereco.append(f"CEP: {self.cep}")
+        return " - ".join(endereco)
+
     class Meta:
         verbose_name = 'Contato'
         verbose_name_plural = 'Contatos'
