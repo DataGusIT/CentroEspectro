@@ -300,62 +300,69 @@
 </section>
 
 <!-- =============================================================================
-   MODAL DE LOGIN AMIGÁVEL - VERSÃO CORRIGIDA
+   MODAL DE LOGIN MODERNO - VERSÃO REFATORADA
    ============================================================================= -->
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+<div class="modal fade login-modal" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content login-modal-content">
-            <div class="modal-body p-0">
-                <!-- Botão de fechar customizado -->
-                <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Fechar">
+            <!-- Header com botão de fechar -->
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close-modern" data-bs-dismiss="modal" aria-label="Fechar">
                     <i class="fas fa-times"></i>
                 </button>
-                
-                <!-- Conteúdo do modal -->
-                <div class="login-modal-wrapper">
-                    <!-- Ícone principal -->
-                    <div class="login-modal-icon">
-                        <i class="fas fa-bookmark"></i>
+            </div>
+            
+            <!-- Corpo do modal -->
+            <div class="modal-body px-4 pb-4">
+                <div class="text-center">
+                    <!-- Ícone animado -->
+                    <div class="login-icon-wrapper mb-4">
+                        <div class="login-icon">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
                     </div>
                     
                     <!-- Título e descrição -->
-                    <h3 class="login-modal-title" id="loginModalLabel">Ops! Você precisa estar logado</h3>
-                    <p class="login-modal-description">
-                        Para salvar suas dúvidas favoritas e acessá-las quando quiser, 
-                        você precisa ter uma conta. É rápido e gratuito!
+                    <h3 class="login-title mb-3" id="loginModalLabel">
+                        Acesse sua conta
+                    </h3>
+                    <p class="login-description mb-4">
+                        Para salvar suas dúvidas favoritas e personalizar sua experiência, 
+                        faça login ou crie uma conta gratuita.
                     </p>
                     
-                    <!-- Benefícios -->
-                    <div class="login-benefits">
+                    <!-- Lista de benefícios -->
+                    <div class="benefits-list mb-4">
                         <div class="benefit-item">
-                            <i class="fas fa-bookmark text-primary"></i>
-                            <span>Salve suas dúvidas favoritas</span>
+                            <i class="fas fa-bookmark"></i>
+                            <span>Salve dúvidas favoritas</span>
                         </div>
                         <div class="benefit-item">
-                            <i class="fas fa-history text-primary"></i>
-                            <span>Acesse seu histórico</span>
+                            <i class="fas fa-history"></i>
+                            <span>Histórico personalizado</span>
                         </div>
                         <div class="benefit-item">
-                            <i class="fas fa-user-circle text-primary"></i>
-                            <span>Personalize sua experiência</span>
+                            <i class="fas fa-sync"></i>
+                            <span>Sincronize dispositivos</span>
                         </div>
                     </div>
                     
                     <!-- Botões de ação -->
-                    <div class="login-modal-actions">
-                        <a href="{% url 'login' %}" class="btn btn-primary btn-login">
+                    <div class="login-actions d-grid gap-3 mb-3">
+                        <a href="{% url 'login' %}" class="btn btn-primary btn-lg btn-login">
                             <i class="fas fa-sign-in-alt me-2"></i>
-                            Fazer Login
+                            Entrar
                         </a>
-                        <a href="{% url 'register' %}" class="btn btn-outline-primary btn-register">
+                        <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg btn-register">
                             <i class="fas fa-user-plus me-2"></i>
-                            Criar Conta Grátis
+                            Criar conta grátis
                         </a>
                     </div>
                     
-                    <!-- Link para continuar sem login -->
-                    <div class="login-modal-footer">
-                        <button type="button" class="btn-link-custom" data-bs-dismiss="modal">
+                    <!-- Link alternativo -->
+                    <div class="login-footer">
+                        <button type="button" class="btn-link-modern" data-bs-dismiss="modal">
+                            <i class="fas fa-arrow-left me-1"></i>
                             Continuar sem salvar
                         </button>
                     </div>
@@ -595,124 +602,70 @@
     }
 
     // =============================================================================
-    // MODAL DE LOGIN AMIGÁVEL
+    // MODAL DE LOGIN MODERNO - VERSÃO SIMPLIFICADA
     // =============================================================================
 
-   /**
-    * Mostra modal de login amigável para usuários não logados - VERSÃO CORRIGIDA
-    */
+    let loginModalInstance = null;
+
     function mostrarLoginAlert() {
-        // Aplicar blur no body antes de mostrar o modal
+        if (!loginModalInstance) {
+            const modalElement = document.getElementById('loginModal');
+            if (!modalElement) {
+                mostrarLoginAlertFallback();
+                return;
+            }
+            loginModalInstance = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: true
+            });
+        }
+        
+        // Aplicar blur
         document.body.classList.add('modal-blur-active');
         
-        // Configurar e mostrar modal
-        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'), {
-            backdrop: 'static',
-            keyboard: true,
-            focus: true
-        });
-        
         // Mostrar modal
-        loginModal.show();
+        loginModalInstance.show();
         
-        // Aguardar o modal aparecer para aplicar animações
-        const modalElement = document.getElementById('loginModal');
-        
-        modalElement.addEventListener('shown.bs.modal', function () {
-            // Aplicar animação de entrada
-            const modalContent = document.querySelector('.login-modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate__animated', 'animate__zoomIn');
-            }
-            
-            // Adicionar efeitos de hover nos botões
-            addButtonHoverEffects();
-            
-            // Forçar foco no modal para acessibilidade
-            modalElement.focus();
-        });
-        
-        // Remover blur e animações quando modal for fechado
-        modalElement.addEventListener('hidden.bs.modal', function () {
+        // Configurar eventos
+        document.getElementById('loginModal').addEventListener('hidden.bs.modal', function () {
             document.body.classList.remove('modal-blur-active');
-            
-            const modalContent = document.querySelector('.login-modal-content');
-            if (modalContent) {
-                modalContent.classList.remove('animate__animated', 'animate__zoomIn');
-            }
-        });
-        
-        // Garantir que o modal seja removido do DOM se necessário
-        modalElement.addEventListener('hidden.bs.modal', function () {
-            // Limpar qualquer estado residual
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        });
+        }, { once: true });
     }
 
-    /**
-    * Adiciona efeitos visuais aos botões do modal - VERSÃO MELHORADA
-    */
-    function addButtonHoverEffects() {
-        const buttons = document.querySelectorAll('.login-modal-actions .btn');
-        
-        buttons.forEach(button => {
-            // Remover listeners anteriores para evitar duplicação
-            button.removeEventListener('mouseenter', buttonHoverIn);
-            button.removeEventListener('mouseleave', buttonHoverOut);
-            
-            // Adicionar novos listeners
-            button.addEventListener('mouseenter', buttonHoverIn);
-            button.addEventListener('mouseleave', buttonHoverOut);
-        });
-    }
-
-    function buttonHoverIn() {
-        this.style.transform = 'translateY(-2px) scale(1.02)';
-        this.style.transition = 'all 0.3s ease';
-    }
-
-    function buttonHoverOut() {
-        this.style.transform = 'translateY(0) scale(1)';
-    }
-
-    /**
-    * Função para inicializar o modal quando necessário
-    */
-    function initModalLogin() {
-        // Verificar se o modal existe
-        const modalElement = document.getElementById('loginModal');
-        if (!modalElement) {
-            console.warn('Modal de login não encontrado!');
-            return;
-        }
-        
-        // Garantir que o Bootstrap está carregado
-        if (typeof bootstrap === 'undefined') {
-            console.error('Bootstrap não está carregado!');
-            return;
-        }
-        
-        // Configurar eventos do modal
-        modalElement.addEventListener('show.bs.modal', function () {
-            document.body.classList.add('modal-blur-active');
-        });
-        
-        modalElement.addEventListener('hide.bs.modal', function () {
-            document.body.classList.remove('modal-blur-active');
-        });
-    }
-
-    // Inicializar quando o DOM estiver pronto
-    document.addEventListener('DOMContentLoaded', function() {
-        initModalLogin();
-    });
-
-    // Função de fallback caso o modal não funcione
     function mostrarLoginAlertFallback() {
         if (confirm('Você precisa estar logado para salvar FAQs.\n\nDeseja ir para a página de login?')) {
-            window.location.href = '/login/'; // Ajuste a URL conforme sua configuração Django
+            window.location.href = '/login/';
         }
+    }
+
+    // Função melhorada para toast
+    function showToast(type, message) {
+        const toastElement = document.getElementById('toastMessage');
+        const toastIcon = toastElement.querySelector('.toast-icon i');
+        const toastTitle = toastElement.querySelector('.toast-title');
+        const toastBody = toastElement.querySelector('.toast-body');
+        
+        // Remover classes anteriores
+        toastElement.className = 'toast modern-toast';
+        
+        // Configurar por tipo
+        const config = {
+            success: { icon: 'fas fa-check-circle', title: 'Sucesso', class: 'toast-success' },
+            error: { icon: 'fas fa-exclamation-circle', title: 'Erro', class: 'toast-error' },
+            warning: { icon: 'fas fa-exclamation-triangle', title: 'Atenção', class: 'toast-warning' },
+            info: { icon: 'fas fa-info-circle', title: 'Informação', class: 'toast-info' }
+        };
+        
+        const typeConfig = config[type] || config.info;
+        
+        toastElement.classList.add(typeConfig.class);
+        toastIcon.className = typeConfig.icon;
+        toastTitle.textContent = typeConfig.title;
+        toastBody.textContent = message;
+        
+        // Mostrar toast
+        const toast = new bootstrap.Toast(toastElement, { delay: 4000 });
+        toast.show();
     }
 
     // =============================================================================
@@ -792,342 +745,265 @@
 {{ block.super }}
 <style>
     /* =============================================================================
-    * EFEITO DE BLUR NO BACKGROUND QUANDO MODAL ESTÁ ATIVO - CORRIGIDO
+    * MODAL DE LOGIN MODERNO - ESTILOS REFATORADOS
     * ============================================================================= */
-    .modal-blur-active {
-        overflow: hidden;
-    }
 
-    /* Aplicar blur em todos os elementos EXCETO o modal */
-    .modal-blur-active > *:not(.modal):not(.modal-backdrop):not(.toast-container) {
-        filter: blur(4px);
-        transition: filter 0.3s ease;
-    }
-
-    /* Garantir que o modal não tenha blur */
-    .modal-blur-active .modal,
-    .modal-blur-active .modal-backdrop {
-        filter: none !important;
+    /* Backdrop com desfoque */
+    .modal-backdrop.show {
+        backdrop-filter: blur(10px);
+        background-color: rgba(0, 0, 0, 0.3); /* escurece um pouco o fundo */
     }
 
     /* =============================================================================
-    * CORREÇÕES PARA CENTRALIZAÇÃO DO MODAL
+    * ESTRUTURA DO MODAL
     * ============================================================================= */
-    .modal {
-        z-index: 1055; /* Garantir que fique acima de tudo */
+
+    .login-modal .modal-dialog {
+        max-width: 440px;
+        margin: 1rem auto;
+        /* Remova o border-radius e overflow daqui */
     }
 
-    .modal-backdrop {
-        z-index: 1050;
-        background-color: rgba(0, 0, 0, 0.6); /* Backdrop mais escuro */
-    }
-
-    .modal-dialog {
-        margin: 1.75rem auto; /* Centralização automática */
-        max-width: 500px;
-        width: 90%;
-    }
-
-    /* Garantir centralização vertical em telas grandes */
-    @media (min-height: 576px) {
-        .modal-dialog-centered {
-            min-height: calc(100vh - 3.5rem);
-            display: flex;
-            align-items: center;
-        }
-    }
-
-    /* =============================================================================
-    * ESTILIZAÇÃO DO MODAL DE LOGIN - APRIMORADA
-    * ============================================================================= */
     .login-modal-content {
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-        overflow: hidden;
-        position: relative;
-        transform: scale(1);
-        transition: transform 0.3s ease;
+        border: 2px solid #ccc;
+        border-radius: 24px; /* Aumentado de var(--border-radius) para mais redondo */
+        box-shadow: var(--shadow-modern);
+        background: white;
+        overflow: hidden; /* Mantenha aqui para que o conteúdo siga o arredondamento */
     }
 
-    /* Botão de fechar customizado */
-    .btn-close-custom {
+
+    /* =============================================================================
+    * HEADER DO MODAL
+    * ============================================================================= */
+
+    .modal-header {
+        position: relative;
+        padding: 1rem 1rem 0;
+    }
+
+    .btn-close-modern {
         position: absolute;
         top: 15px;
         right: 15px;
-        background: rgba(0, 0, 0, 0.1);
+        background: rgba(0, 0, 0, 0.05);
         border: none;
         border-radius: 50%;
-        width: 35px;
-        height: 35px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #666;
-        z-index: 10;
-        transition: all 0.3s ease;
         cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
     }
 
-    .btn-close-custom:hover {
+    .btn-close-modern:hover {
         background: rgba(220, 53, 69, 0.1);
         color: #dc3545;
         transform: rotate(90deg);
     }
 
-    /* Container principal do modal */
-    .login-modal-wrapper {
-        padding: 3rem 2.5rem;
-        text-align: center;
+    /* =============================================================================
+    * ÍCONE PRINCIPAL
+    * ============================================================================= */
+
+    .login-icon-wrapper {
         position: relative;
     }
 
-    /* Ícone principal do modal */
-    .login-modal-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    .login-icon {
+        width: 70px;
+        height: 70px;
+        background: var(--gradient-modern);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 1.5rem;
-        box-shadow: 0 10px 25px rgba(106, 62, 161, 0.3);
-        animation: pulse 2s infinite;
+        margin: 0 auto;
+        animation: pulse-modern 2s infinite;
     }
 
-    .login-modal-icon i {
-        font-size: 2rem;
+    .login-icon i {
+        font-size: 1.8rem;
         color: white;
     }
 
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 10px 25px rgba(106, 62, 161, 0.3);
-        }
-        50% {
-            transform: scale(1.05);
-            box-shadow: 0 15px 35px rgba(106, 62, 161, 0.4);
-        }
-        100% {
-            transform: scale(1);
-            box-shadow: 0 10px 25px rgba(106, 62, 161, 0.3);
-        }
+    @keyframes pulse-modern {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
-    /* Título do modal */
-    .login-modal-title {
+    /* =============================================================================
+    * TEXTOS E CONTEÚDO
+    * ============================================================================= */
+
+    .login-title {
         font-size: 1.5rem;
         font-weight: 700;
         color: #2c3e50;
         margin-bottom: 1rem;
-        line-height: 1.3;
     }
 
-    /* Descrição do modal */
-    .login-modal-description {
+    .login-description {
         font-size: 1rem;
         color: #6c757d;
-        margin-bottom: 2rem;
         line-height: 1.6;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
+        margin-bottom: 1.5rem;
     }
 
-    /* Container dos benefícios */
-    .login-benefits {
-        margin-bottom: 2.5rem;
-        text-align: left;
-        max-width: 300px;
-        margin-left: auto;
-        margin-right: auto;
+    /* =============================================================================
+    * LISTA DE BENEFÍCIOS
+    * ============================================================================= */
+
+    .benefits-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-bottom: 2rem;
     }
 
     .benefit-item {
         display: flex;
         align-items: center;
-        margin-bottom: 0.8rem;
-        padding: 0.5rem;
-        border-radius: 8px;
+        justify-content: flex-start;
+        padding: 0.5rem 1rem;
+        background: rgba(106, 62, 161, 0.05);
+        border-radius: 16px; /* Aumentado de 12px para mais redondo */
         transition: all 0.3s ease;
     }
 
     .benefit-item:hover {
-        background-color: rgba(106, 62, 161, 0.05);
+        background: rgba(106, 62, 161, 0.1);
         transform: translateX(5px);
     }
 
     .benefit-item i {
-        width: 20px;
+        color: var(--primary);
         margin-right: 12px;
-        font-size: 1rem;
+        width: 16px;
+        font-size: 0.9rem;
     }
 
     .benefit-item span {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #495057;
         font-weight: 500;
     }
 
-    /* Container dos botões de ação */
-    .login-modal-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
+    /* =============================================================================
+    * FOOTER DO MODAL
+    * ============================================================================= */
 
-    .login-modal-actions .btn {
-        padding: 12px 30px;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        border: 2px solid transparent;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Botão primário (Login) */
-    .btn-login {
-        background: linear-gradient(135deg, var(--primary), var(--primary-light));
-        border-color: var(--primary);
-        box-shadow: 0 8px 20px rgba(106, 62, 161, 0.3);
-    }
-
-    .btn-login:hover {
-        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-        box-shadow: 0 12px 30px rgba(106, 62, 161, 0.4);
-        transform: translateY(-2px) scale(1.02);
-    }
-
-    /* Botão secundário (Cadastro) */
-    .btn-register {
-        background: transparent;
-        border-color: var(--primary);
-        color: var(--primary);
-    }
-
-    .btn-register:hover {
-        background: var(--primary);
-        color: white;
-        box-shadow: 0 8px 20px rgba(106, 62, 161, 0.2);
-        transform: translateY(-2px) scale(1.02);
-    }
-
-    /* Footer do modal */
-    .login-modal-footer {
+    .login-footer {
         border-top: 1px solid #e9ecef;
-        padding-top: 1.5rem;
-        margin-top: 1rem;
+        padding-top: 1rem;
     }
 
-    .btn-link-custom {
+    .btn-link-modern {
         background: none;
         border: none;
         color: #6c757d;
         font-size: 0.9rem;
-        text-decoration: none;
         cursor: pointer;
         transition: all 0.3s ease;
         padding: 0.5rem 1rem;
-        border-radius: 25px;
+        border-radius: 30px; /* Aumentado de 25px para mais redondo */
     }
 
-    .btn-link-custom:hover {
+    .btn-link-modern:hover {
         color: var(--primary);
-        background-color: rgba(106, 62, 161, 0.05);
+        background: rgba(106, 62, 161, 0.05);
     }
 
     /* =============================================================================
-    * ANIMAÇÕES DO MODAL - MELHORADAS
+    * TOAST NOTIFICATIONS
     * ============================================================================= */
-    .login-modal-content.animate__zoomIn {
-        animation-duration: 0.5s;
-        animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    .modern-toast {
+        border: none;
+        border-radius: 16px; /* Aumentado de 12px para mais redondo */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
     }
 
-    /* Efeito de entrada escalonada para os elementos */
-    .login-modal-wrapper > * {
-        opacity: 0;
-        transform: translateY(20px);
-        animation: slideInUp 0.6s ease forwards;
+    .toast-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .login-modal-icon { animation-delay: 0.1s; }
-    .login-modal-title { animation-delay: 0.2s; }
-    .login-modal-description { animation-delay: 0.3s; }
-    .login-benefits { animation-delay: 0.4s; }
-    .login-modal-actions { animation-delay: 0.5s; }
-    .login-modal-footer { animation-delay: 0.6s; }
+    .toast-success .toast-icon {
+        background: #28a745;
+        color: white;
+    }
 
-    @keyframes slideInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .toast-error .toast-icon {
+        background: #dc3545;
+        color: white;
+    }
+
+    .toast-warning .toast-icon {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .toast-info .toast-icon {
+        background: #17a2b8;
+        color: white;
     }
 
     /* =============================================================================
-    * RESPONSIVIDADE DO MODAL - APRIMORADA
+    * RESPONSIVIDADE
     * ============================================================================= */
+
     @media (max-width: 576px) {
-        .modal-dialog {
-            margin: 1rem auto;
-            width: 95%;
+        .login-modal .modal-dialog {
+            margin: 1rem;
+            max-width: none;
         }
         
-        .login-modal-wrapper {
-            padding: 2rem 1.5rem;
+        .modal-body {
+            padding: 1.5rem !important;
         }
         
-        .login-modal-title {
+        .login-icon {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .login-icon i {
+            font-size: 1.5rem;
+        }
+        
+        .login-title {
             font-size: 1.3rem;
         }
         
-        .login-modal-description {
+        .login-description {
             font-size: 0.9rem;
         }
         
-        .login-modal-icon {
-            width: 70px;
-            height: 70px;
+        .benefit-item {
+            padding: 0.4rem 0.8rem;
         }
         
-        .login-modal-icon i {
-            font-size: 1.7rem;
+        .benefit-item span {
+            font-size: 0.85rem;
         }
         
-        .login-modal-actions .btn {
-            padding: 10px 25px;
-            font-size: 0.95rem;
+        .btn-login, .btn-register {
+            padding: 10px 20px;
+            font-size: 0.9rem;
         }
     }
 
-    /* =============================================================================
-    * CORREÇÕES ADICIONAIS PARA BOOTSTRAP 5
-    * ============================================================================= */
-    .modal.show {
-        display: flex !important;
-        align-items: center;
-    }
-
-    .modal.show .modal-dialog {
-        transform: none;
-    }
-
-    /* Garantir que o modal apareça corretamente */
-    .modal-open {
-        overflow: hidden;
-    }
-
-    .modal-open .modal {
-        overflow-x: hidden;
-        overflow-y: auto;
-    }
     /* =============================================================================
      * BOTÕES DO ACCORDION - CABEÇALHO DAS PERGUNTAS
      * ============================================================================= */
