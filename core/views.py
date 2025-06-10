@@ -2,25 +2,58 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.core.paginator import Paginator
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm
 from django.db.models import Q
 from .models import (
     FAQ, CategoriaFAQ, CategoriaContato, CategoriaFerramenta, 
-    Contato, Ferramenta, CustomUser, UserDownload
+    Contato, Ferramenta, CustomUser, UserDownload, UserSavedFAQ
 )
 from collections import defaultdict
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
+import json
+import logging
+
+# =============================================================================
+# FUNÇÕES AUXILIARES
+# =============================================================================
+
+def is_admin(user):
+    """Função auxiliar para verificar se o usuário é admin"""
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+# =============================================================================
+# VIEWS PÚBLICAS - PÁGINAS PRINCIPAIS
+# =============================================================================
+
 def index(request):
+    """Página inicial do sistema"""
     return render(request, 'core/index.html', {'title': 'Início'})
 
+def sobre(request):
+    """Página sobre o sistema"""
+    return render(request, 'core/sobre.html', {'title': 'Sobre'})
+
+def privacy(request):
+    """Página de política de privacidade"""
+    return render(request, 'core/privacy.html', {'title': 'Privacy Policy'})
+
 def newsletter_signup(request):
+    """Cadastro de newsletter"""
     if request.method == "POST":
         email = request.POST.get('email')
         # Aqui você pode adicionar lógica para salvar o e-mail na sua lista de newsletter
         return HttpResponse(f"Obrigado por se inscrever! Seu e-mail: {email}")
-    return redirect('index')  # ou para qualquer outra página
+    return redirect('index')
+
+# =============================================================================
+# VIEWS DE FERRAMENTAS
+# =============================================================================
 
 def ferramentas(request):
+    """Lista todas as ferramentas organizadas por categoria"""
     # Obter todas as ferramentas agrupadas por categoria (usando as novas categorias)
     ferramentas_pictogramas = Ferramenta.objects.filter(categoria='pictogramas_escolares')
     ferramentas_alfabetizacao = Ferramenta.objects.filter(categoria='alfabetizacao')
@@ -40,49 +73,208 @@ def ferramentas(request):
     return render(request, 'core/ferramentas.html', context)
 
 def detalhes_ferramenta(request, id):
+    """Exibe detalhes de uma ferramenta específica"""
     ferramenta = Ferramenta.objects.get(id=id)
     return render(request, 'core/detalhes_ferramenta.html', {
         'title': ferramenta.nome,
         'ferramenta': ferramenta
     })
 
+@login_required
+def register_download(request, ferramenta_id):
+    """Registra o download de uma ferramenta pelo usuário"""
+    if request.method == 'POST':
+        ferramenta = get_object_or_404(Ferramenta, id=ferramenta_id)
+        # Criar o registro de download
+        download = UserDownload(user=request.user, ferramenta=ferramenta)
+        download.save()
+        messages.success(request, f'Download de {ferramenta.nome} registrado!')
+        return redirect('detalhes_ferramenta', id=ferramenta_id)
+    
+    return redirect('ferramentas')
+
+# =============================================================================
+# VIEWS DE FAQ/DÚVIDAS
+# =============================================================================
+
 def duvidas(request):
+    """Lista todas as FAQs organizadas por categoria com funcionalidade de busca"""
     # Busca todas as categorias e FAQs
     categorias = CategoriaFAQ.objects.all()
     faqs_por_categoria = defaultdict(list)
     
     # Verifica se há um termo de pesquisa
-    termo_pesquisa = request.GET.get('termo', None)
+    termo_pesquisa = request.GET.get('termo', '')
+    if request.method == 'POST':
+        termo_pesquisa = request.POST.get('termo', '')
+    
     if termo_pesquisa:
         # Filtra FAQs pela pesquisa
         faqs = FAQ.objects.filter(
             Q(pergunta__icontains=termo_pesquisa) | 
             Q(resposta__icontains=termo_pesquisa)
-        )
+        ).select_related('categoria')
     else:
         # Busca todas as FAQs
-        faqs = FAQ.objects.all()
+        faqs = FAQ.objects.all().select_related('categoria')
     
     # Organiza FAQs por categoria
     for faq in faqs:
         faqs_por_categoria[faq.categoria.nome].append(faq)
     
+    # Se usuário estiver logado, busca suas FAQs salvas
+    faqs_salvas_ids = []
+    if request.user.is_authenticated:
+        faqs_salvas_ids = UserSavedFAQ.objects.filter(
+            user=request.user
+        ).values_list('faq_id', flat=True)
+    
     context = {
         'faqs_por_categoria': dict(faqs_por_categoria),
         'categorias': categorias,
         'termo_pesquisa': termo_pesquisa,
+        'faqs_salvas_ids': list(faqs_salvas_ids),
     }
     
     return render(request, 'core/duvidas.html', context)
 
 def pesquisar_faqs(request):
+    """View para buscar FAQs - redirect para duvidas com termo de pesquisa"""
     if request.method == 'POST':
         termo = request.POST.get('termo', '')
-        # Redireciona para a mesma página com o termo como parâmetro GET
         return redirect(f'/duvidas/?termo={termo}')
     return redirect('duvidas')
 
+@login_required
+@require_POST
+@csrf_protect
+def salvar_faq(request, faq_id):
+    """View para salvar uma FAQ no perfil do usuário"""
+    try:
+        # Busca a FAQ
+        faq = get_object_or_404(FAQ, id=faq_id)
+        
+        # Busca o CustomUser de forma mais robusta
+        try:
+            # Primeiro tenta por username
+            user = CustomUser.objects.get(username=request.user.username)
+        except CustomUser.DoesNotExist:
+            try:
+                # Se não encontrar, tenta por email (se ambos modelos tiverem)
+                if hasattr(request.user, 'email') and request.user.email:
+                    user = CustomUser.objects.get(email=request.user.email)
+                else:
+                    raise CustomUser.DoesNotExist
+            except CustomUser.DoesNotExist:
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Usuário não encontrado no sistema. Faça login novamente.'
+                })
+        
+        # Verifica se o usuário está autenticado
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Usuário não autenticado corretamente.'
+            })
+        
+        # Verifica se já não está salva
+        faq_salva, created = UserSavedFAQ.objects.get_or_create(
+            user=user, 
+            faq=faq
+        )
+        
+        if created:
+            return JsonResponse({
+                'success': True, 
+                'message': 'Dúvida salva com sucesso!',
+                'action': 'saved'
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'message': 'Esta dúvida já está salva.',
+                'action': 'already_saved'
+            })
+            
+    except FAQ.DoesNotExist:
+        return JsonResponse({
+            'success': False, 
+            'message': 'Dúvida não encontrada.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'message': f'Erro interno: {str(e)}'
+        })
+
+@login_required
+@require_POST
+@csrf_protect
+def remover_faq_salva(request, faq_id):
+    """View para remover uma FAQ salva do perfil do usuário"""
+    try:
+        # Busca a FAQ
+        faq = get_object_or_404(FAQ, id=faq_id)
+        
+        # Busca o CustomUser de forma mais robusta
+        try:
+            # Primeiro tenta por username
+            user = CustomUser.objects.get(username=request.user.username)
+        except CustomUser.DoesNotExist:
+            try:
+                # Se não encontrar, tenta por email (se ambos modelos tiverem)
+                if hasattr(request.user, 'email') and request.user.email:
+                    user = CustomUser.objects.get(email=request.user.email)
+                else:
+                    raise CustomUser.DoesNotExist
+            except CustomUser.DoesNotExist:
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Usuário não encontrado no sistema. Faça login novamente.'
+                })
+        
+        # Verifica se o usuário está autenticado
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Usuário não autenticado corretamente.'
+            })
+        
+        # Tenta remover a FAQ salva
+        faq_salva = UserSavedFAQ.objects.filter(user=user, faq=faq).first()
+        
+        if faq_salva:
+            faq_salva.delete()
+            return JsonResponse({
+                'success': True, 
+                'message': 'Dúvida removida com sucesso!',
+                'action': 'removed'
+            })
+        else:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Dúvida não encontrada nas suas dúvidas salvas.',
+                'action': 'not_found'
+            })
+            
+    except FAQ.DoesNotExist:
+        return JsonResponse({
+            'success': False, 
+            'message': 'Dúvida não encontrada.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'message': f'Erro interno: {str(e)}'
+        })
+
+# =============================================================================
+# VIEWS DE CONTATOS
+# =============================================================================
+
 def contatos(request):
+    """Lista todos os contatos organizados por categoria"""
     # Busca todas as categorias disponíveis
     categorias = CategoriaContato.objects.all()
     
@@ -106,22 +298,17 @@ def contatos(request):
     
     return render(request, 'core/contatos.html', context)   
 
-
 def detalhes_contato(request, id):
+    """Exibe detalhes de um contato específico"""
     contato = Contato.objects.get(pk=id)
     return render(request, 'core/detalhes_contato.html', {'contato': contato})
 
-def sobre(request):
-    return render(request, 'core/sobre.html', {'title': 'Sobre'})
-
-def privacy(request):
-    return render(request, 'core/privacy.html', {'title': 'Privacy Policy'})
-
-# Função auxiliar para verificar se o usuário é admin
-def is_admin(user):
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
+# =============================================================================
+# VIEWS DE AUTENTICAÇÃO E PERFIL
+# =============================================================================
 
 def register_view(request):
+    """Registro de novos usuários"""
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -139,6 +326,7 @@ def register_view(request):
     return render(request, 'core/auth/register.html', {'form': form})
 
 def login_view(request):
+    """Login de usuários"""
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -169,14 +357,21 @@ def login_view(request):
     return render(request, 'core/auth/login.html', {'form': form})
 
 def logout_view(request):
+    """Logout de usuários"""
     logout(request)
     messages.success(request, 'Você saiu com sucesso!')
     return redirect('index')
 
 @login_required
 def profile_view(request):
+    """Perfil do usuário com histórico de downloads e FAQs salvas"""
     user = request.user
-    downloads = UserDownload.objects.filter(user=user)
+    downloads = UserDownload.objects.filter(user=user).select_related('ferramenta')
+    
+    # Busca as dúvidas salvas pelo usuário
+    duvidas_salvas = UserSavedFAQ.objects.filter(
+        user=user
+    ).select_related('faq', 'faq__categoria').order_by('-data_salva')
     
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=user)
@@ -190,25 +385,17 @@ def profile_view(request):
     return render(request, 'core/auth/profile.html', {
         'form': form,
         'downloads': downloads,
+        'duvidas_salvas': duvidas_salvas,
         'title': 'Meu Perfil'
     })
 
-# Rota para registrar downloads
-@login_required
-def register_download(request, ferramenta_id):
-    if request.method == 'POST':
-        ferramenta = get_object_or_404(Ferramenta, id=ferramenta_id)
-        # Criar o registro de download
-        download = UserDownload(user=request.user, ferramenta=ferramenta)
-        download.save()
-        messages.success(request, f'Download de {ferramenta.nome} registrado!')
-        return redirect('detalhes_ferramenta', id=ferramenta_id)
-    
-    return redirect('ferramentas')
+# =============================================================================
+# VIEWS ADMINISTRATIVAS - DASHBOARD
+# =============================================================================
 
-# Views para gestão de recursos (apenas para admins)
 @user_passes_test(is_admin)
 def admin_dashboard(request):
+    """Dashboard administrativo com estatísticas gerais"""
     categorias_faq = CategoriaFAQ.objects.all().count()
     categorias_contato = CategoriaContato.objects.all().count()
     categorias_ferramenta = CategoriaFerramenta.objects.all().count()
@@ -231,9 +418,13 @@ def admin_dashboard(request):
     
     return render(request, 'core/admin/dashboard.html', context)
 
-# CRUD para Categorias FAQ
+# =============================================================================
+# VIEWS ADMINISTRATIVAS - GESTÃO DE CATEGORIAS FAQ
+# =============================================================================
+
 @user_passes_test(is_admin)
 def admin_categorias_faq(request):
+    """Lista todas as categorias FAQ"""
     categorias = CategoriaFAQ.objects.all()
     return render(request, 'core/admin/categorias_faq.html', {
         'categorias': categorias,
@@ -242,6 +433,7 @@ def admin_categorias_faq(request):
 
 @user_passes_test(is_admin)
 def admin_categoria_faq_criar(request):
+    """Criar nova categoria FAQ"""
     if request.method == 'POST':
         nome = request.POST.get('nome')
         icone = request.POST.get('icone')
@@ -258,6 +450,7 @@ def admin_categoria_faq_criar(request):
 
 @user_passes_test(is_admin)
 def admin_categoria_faq_editar(request, id):
+    """Editar categoria FAQ existente"""
     categoria = get_object_or_404(CategoriaFAQ, id=id)
     
     if request.method == 'POST':
@@ -275,6 +468,7 @@ def admin_categoria_faq_editar(request, id):
 
 @user_passes_test(is_admin)
 def admin_categoria_faq_excluir(request, id):
+    """Excluir categoria FAQ"""
     categoria = get_object_or_404(CategoriaFAQ, id=id)
     
     if request.method == 'POST':
@@ -288,9 +482,13 @@ def admin_categoria_faq_excluir(request, id):
         'title': 'Excluir Categoria FAQ'
     })
 
-# CRUD para FAQ
+# =============================================================================
+# VIEWS ADMINISTRATIVAS - GESTÃO DE FAQ
+# =============================================================================
+
 @user_passes_test(is_admin)
 def admin_faqs(request):
+    """Lista todas as FAQs"""
     faqs = FAQ.objects.all()
     return render(request, 'core/admin/faqs.html', {
         'faqs': faqs,
@@ -299,6 +497,7 @@ def admin_faqs(request):
 
 @user_passes_test(is_admin)
 def admin_faq_criar(request):
+    """Criar nova FAQ"""
     categorias = CategoriaFAQ.objects.all()
     
     if request.method == 'POST':
@@ -320,6 +519,7 @@ def admin_faq_criar(request):
 
 @user_passes_test(is_admin)
 def admin_faq_editar(request, id):
+    """Editar FAQ existente"""
     faq = get_object_or_404(FAQ, id=id)
     categorias = CategoriaFAQ.objects.all()
     
@@ -341,6 +541,7 @@ def admin_faq_editar(request, id):
 
 @user_passes_test(is_admin)
 def admin_faq_excluir(request, id):
+    """Excluir FAQ"""
     faq = get_object_or_404(FAQ, id=id)
     
     if request.method == 'POST':
@@ -354,10 +555,13 @@ def admin_faq_excluir(request, id):
         'title': 'Excluir FAQ'
     })
 
+# =============================================================================
+# VIEWS ADMINISTRATIVAS - GESTÃO DE CATEGORIAS CONTATO
+# =============================================================================
 
-# CRUD para Categorias de Contato
 @user_passes_test(is_admin)
 def admin_categorias_contato(request):
+    """Lista todas as categorias de contato"""
     categorias = CategoriaContato.objects.all()
     return render(request, 'core/admin/categorias_contato.html', {
         'categorias': categorias,
@@ -366,6 +570,7 @@ def admin_categorias_contato(request):
 
 @user_passes_test(is_admin)
 def admin_categoria_contato_criar(request):
+    """Criar nova categoria de contato"""
     if request.method == 'POST':
         nome = request.POST.get('nome')
         icone = request.POST.get('icone')
@@ -382,6 +587,7 @@ def admin_categoria_contato_criar(request):
 
 @user_passes_test(is_admin)
 def admin_categoria_contato_editar(request, id):
+    """Editar categoria de contato existente"""
     categoria = get_object_or_404(CategoriaContato, id=id)
     
     if request.method == 'POST':
@@ -399,6 +605,7 @@ def admin_categoria_contato_editar(request, id):
 
 @user_passes_test(is_admin)
 def admin_categoria_contato_excluir(request, id):
+    """Excluir categoria de contato"""
     categoria = get_object_or_404(CategoriaContato, id=id)
     
     if request.method == 'POST':
@@ -412,9 +619,13 @@ def admin_categoria_contato_excluir(request, id):
         'title': 'Excluir Categoria de Contato'
     })
 
-# CRUD para Contatos
+# =============================================================================
+# VIEWS ADMINISTRATIVAS - GESTÃO DE CONTATOS
+# =============================================================================
+
 @user_passes_test(is_admin)
 def admin_contatos(request):
+    """Lista todos os contatos"""
     contatos = Contato.objects.all()
     return render(request, 'core/admin/contatos.html', {
         'contatos': contatos,
@@ -423,6 +634,7 @@ def admin_contatos(request):
 
 @user_passes_test(is_admin)
 def admin_contato_criar(request):
+    """Criar novo contato"""
     categorias = CategoriaContato.objects.all()
     
     if request.method == 'POST':
@@ -478,6 +690,7 @@ def admin_contato_criar(request):
 
 @user_passes_test(is_admin)
 def admin_contato_editar(request, id):
+    """Editar contato existente"""
     contato = get_object_or_404(Contato, id=id)
     categorias = CategoriaContato.objects.all()
     
@@ -519,6 +732,7 @@ def admin_contato_editar(request, id):
 
 @user_passes_test(is_admin)
 def admin_contato_excluir(request, id):
+    """Excluir contato"""
     contato = get_object_or_404(Contato, id=id)
     
     if request.method == 'POST':
@@ -532,9 +746,13 @@ def admin_contato_excluir(request, id):
         'title': 'Excluir Contato'
     })
 
-# CRUD para Categorias de Ferramenta
+# =============================================================================
+# VIEWS ADMINISTRATIVAS - GESTÃO DE CATEGORIAS FERRAMENTA
+# =============================================================================
+
 @user_passes_test(is_admin)
 def admin_categorias_ferramenta(request):
+    """Lista todas as categorias de ferramenta"""
     categorias = CategoriaFerramenta.objects.all()
     return render(request, 'core/admin/categorias_ferramenta.html', {
         'categorias': categorias,
@@ -543,6 +761,7 @@ def admin_categorias_ferramenta(request):
 
 @user_passes_test(is_admin)
 def admin_categoria_ferramenta_criar(request):
+    """Criar nova categoria de ferramenta"""
     if request.method == 'POST':
         nome = request.POST.get('nome')
         icone = request.POST.get('icone')
@@ -559,6 +778,7 @@ def admin_categoria_ferramenta_criar(request):
 
 @user_passes_test(is_admin)
 def admin_categoria_ferramenta_editar(request, id):
+    """Editar categoria de ferramenta existente"""
     categoria = get_object_or_404(CategoriaFerramenta, id=id)
     
     if request.method == 'POST':
@@ -576,6 +796,7 @@ def admin_categoria_ferramenta_editar(request, id):
 
 @user_passes_test(is_admin)
 def admin_categoria_ferramenta_excluir(request, id):
+    """Excluir categoria de ferramenta"""
     categoria = get_object_or_404(CategoriaFerramenta, id=id)
     
     if request.method == 'POST':
@@ -589,10 +810,14 @@ def admin_categoria_ferramenta_excluir(request, id):
         'title': 'Excluir Categoria de Ferramenta'
     })
 
-# CRUD para Ferramentas
+# =============================================================================
+# VIEWS ADMINISTRATIVAS - GESTÃO DE FERRAMENTAS
+# =============================================================================
+
 @user_passes_test(is_admin)
 def admin_ferramentas(request):
-    ferramentas = Ferramenta.objects.all()
+    """Lista todas as ferramentas"""
+    ferramentas = Ferramenta.objects.all().select_related('tipo')
     return render(request, 'core/admin/ferramentas.html', {
         'ferramentas': ferramentas,
         'title': 'Gestão de Ferramentas'
@@ -600,6 +825,7 @@ def admin_ferramentas(request):
 
 @user_passes_test(is_admin)
 def admin_ferramenta_criar(request):
+    """Criar nova ferramenta"""
     categorias = CategoriaFerramenta.objects.all()
     
     if request.method == 'POST':
@@ -607,9 +833,12 @@ def admin_ferramenta_criar(request):
         descricao = request.POST.get('descricao')
         icone_classe = request.POST.get('icone_classe')
         tipo_id = request.POST.get('tipo')
-        tipo = get_object_or_404(CategoriaFerramenta, id=tipo_id)
+        tipo = get_object_or_404(CategoriaFerramenta, id=tipo_id) if tipo_id else None
         eh_gratuita = 'eh_gratuita' in request.POST
         categoria = request.POST.get('categoria')
+        
+        # Tratamento para upload de arquivo
+        arquivo = request.FILES.get('arquivo')
         
         ferramenta = Ferramenta(
             nome=nome,
@@ -617,7 +846,8 @@ def admin_ferramenta_criar(request):
             icone_classe=icone_classe,
             tipo=tipo,
             eh_gratuita=eh_gratuita,
-            categoria=categoria
+            categoria=categoria,
+            arquivo=arquivo
         )
         ferramenta.save()
         
@@ -632,6 +862,7 @@ def admin_ferramenta_criar(request):
 
 @user_passes_test(is_admin)
 def admin_ferramenta_editar(request, id):
+    """Editar ferramenta existente"""
     ferramenta = get_object_or_404(Ferramenta, id=id)
     categorias = CategoriaFerramenta.objects.all()
     
@@ -639,10 +870,17 @@ def admin_ferramenta_editar(request, id):
         ferramenta.nome = request.POST.get('nome')
         ferramenta.descricao = request.POST.get('descricao')
         ferramenta.icone_classe = request.POST.get('icone_classe')
+        
         tipo_id = request.POST.get('tipo')
-        ferramenta.tipo = get_object_or_404(CategoriaFerramenta, id=tipo_id)
+        ferramenta.tipo = get_object_or_404(CategoriaFerramenta, id=tipo_id) if tipo_id else None
+        
         ferramenta.eh_gratuita = 'eh_gratuita' in request.POST
         ferramenta.categoria = request.POST.get('categoria')
+        
+        # Tratamento para upload de arquivo
+        if 'arquivo' in request.FILES:
+            ferramenta.arquivo = request.FILES['arquivo']
+        
         ferramenta.save()
         
         messages.success(request, 'Ferramenta atualizada com sucesso!')
@@ -657,6 +895,7 @@ def admin_ferramenta_editar(request, id):
 
 @user_passes_test(is_admin)
 def admin_ferramenta_excluir(request, id):
+    """Excluir ferramenta"""
     ferramenta = get_object_or_404(Ferramenta, id=id)
     
     if request.method == 'POST':
@@ -669,6 +908,10 @@ def admin_ferramenta_excluir(request, id):
         'tipo': 'Ferramenta',
         'title': 'Excluir Ferramenta'
     })
+
+# =============================================================================
+# VIEWS IRRELEVANTES ATÉ AGORA - FAZ PARTE DO PERFIL DE USUÁRIO
+# =============================================================================
 
 def document_list(request):
     # Lógica para listar documentos

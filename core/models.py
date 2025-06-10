@@ -1,10 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# Categoria base (abstrata)
+# =============================================================================
+# CATEGORIA BASE (ABSTRATA)
+# =============================================================================
+
 class CategoriaBase(models.Model):
     nome = models.CharField(max_length=100)
-    icone = models.CharField(max_length=50, blank=True, null=True)  # Removido o valor default
+    icone = models.CharField(max_length=50, blank=True, null=True)
     
     class Meta:
         abstract = True
@@ -15,7 +18,22 @@ class CategoriaBase(models.Model):
     def nome_slug(self):
         return self.nome.lower().replace(" ", "-")
 
-# Categorias específicas
+# =============================================================================
+# MODELOS RELACIONADOS A USUÁRIOS
+# =============================================================================
+
+class CustomUser(User):
+    # Campos adicionais
+    is_admin = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = 'Usuário'
+        verbose_name_plural = 'Usuários'
+
+# =============================================================================
+# MODELOS RELACIONADOS A DÚVIDAS/FAQ
+# =============================================================================
+
 class CategoriaFAQ(CategoriaBase):
     class Meta:
         verbose_name = 'Categoria de Dúvida'
@@ -31,17 +49,6 @@ class CategoriaFAQ(CategoriaBase):
         }
         return icones.get(self.nome, 'fas fa-question-circle')
 
-class CategoriaContato(CategoriaBase):
-    class Meta:
-        verbose_name = 'Categoria de Contato'
-        verbose_name_plural = 'Categorias de Contatos'
-
-class CategoriaFerramenta(CategoriaBase):
-    class Meta:
-        verbose_name = 'Categoria de Ferramenta'
-        verbose_name_plural = 'Categorias de Ferramentas'
-
-# Modelos principais
 class FAQ(models.Model):
     categoria = models.ForeignKey(CategoriaFAQ, on_delete=models.CASCADE, related_name='faqs')
     pergunta = models.CharField(max_length=255)
@@ -49,6 +56,46 @@ class FAQ(models.Model):
     
     def __str__(self):
         return self.pergunta
+
+class UserSavedFAQ(models.Model):
+    user = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.CASCADE, 
+        related_name='saved_faqs',
+        verbose_name='Usuário'
+    )
+    faq = models.ForeignKey(
+        'FAQ', 
+        on_delete=models.CASCADE, 
+        related_name='saved_by_users',
+        verbose_name='Dúvida Frequente'
+    )
+    data_salva = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Data de Salvamento'
+    )
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.faq.pergunta[:50]}..."
+    
+    class Meta:
+        verbose_name = 'Dúvida Salva'
+        verbose_name_plural = 'Dúvidas Salvas'
+        ordering = ['-data_salva']
+        unique_together = ['user', 'faq']  # Evita duplicatas
+        indexes = [
+            models.Index(fields=['user', '-data_salva']),
+            models.Index(fields=['faq']),
+        ]
+
+# =============================================================================
+# MODELOS RELACIONADOS A CONTATOS
+# =============================================================================
+
+class CategoriaContato(CategoriaBase):
+    class Meta:
+        verbose_name = 'Categoria de Contato'
+        verbose_name_plural = 'Categorias de Contatos'
 
 class Contato(models.Model):
     nome = models.CharField(max_length=200)
@@ -93,6 +140,15 @@ class Contato(models.Model):
         verbose_name = 'Contato'
         verbose_name_plural = 'Contatos'
 
+# =============================================================================
+# MODELOS RELACIONADOS A FERRAMENTAS
+# =============================================================================
+
+class CategoriaFerramenta(CategoriaBase):
+    class Meta:
+        verbose_name = 'Categoria de Ferramenta'
+        verbose_name_plural = 'Categorias de Ferramentas'
+
 class Ferramenta(models.Model):
     nome = models.CharField(max_length=200)
     descricao = models.TextField()
@@ -110,14 +166,6 @@ class Ferramenta(models.Model):
     
     def __str__(self):
         return self.nome
-
-class CustomUser(User):
-    # Campos adicionais
-    is_admin = models.BooleanField(default=False)
-    
-    class Meta:
-        verbose_name = 'Usuário'
-        verbose_name_plural = 'Usuários'
 
 class UserDownload(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='downloads')
