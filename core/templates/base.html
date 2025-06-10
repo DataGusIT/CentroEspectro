@@ -90,9 +90,18 @@
             color: var(--primary-light);
         }
 
+       /* Substitua o CSS do navbar-toggler existente por este código */
+
+        /* Hamburger Menu Moderno */
         .navbar-toggler {
             border: none;
-            padding: 0.5rem;
+            padding: 8px;
+            background: none;
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
         .navbar-toggler:focus {
@@ -100,8 +109,136 @@
             outline: none;
         }
 
+        .navbar-toggler:hover {
+            background-color: rgba(106, 62, 161, 0.08);
+        }
+
+        /* Esconder o ícone padrão do Bootstrap */
         .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28106, 62, 161, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+            display: none;
+        }
+
+        /* Container do hamburger */
+        .hamburger {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        /* Linhas do hamburger */
+        .hamburger span {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+            border-radius: 2px;
+            transition: all 0.25s ease-in-out;
+            transform-origin: center;
+            will-change: transform, opacity;
+        }
+
+        .hamburger span:nth-child(1) {
+            margin-bottom: 4px;
+        }
+
+        .hamburger span:nth-child(2) {
+            margin-bottom: 4px;
+        }
+
+        /* Animação quando o menu está aberto */
+        .navbar-toggler[aria-expanded="true"] .hamburger span:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .hamburger span:nth-child(2) {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .hamburger span:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+
+        /* Animação quando o menu está fechado - CORREÇÃO DA TRAVADINHA */
+        .navbar-toggler[aria-expanded="false"] .hamburger span:nth-child(1) {
+            transform: translateY(0) rotate(0deg);
+        }
+
+        .navbar-toggler[aria-expanded="false"] .hamburger span:nth-child(2) {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .navbar-toggler[aria-expanded="false"] .hamburger span:nth-child(3) {
+            transform: translateY(0) rotate(0deg);
+        }
+
+        /* Melhorias no menu mobile */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                flex-direction: column;
+                align-items: flex-start;
+                background-color: white;
+                border-radius: 12px;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+                padding: 1.5rem;
+                margin-top: 1rem;
+                border: 1px solid rgba(106, 62, 161, 0.1);
+                backdrop-filter: blur(10px);
+                animation: slideDown 0.3s ease-out;
+            }
+
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .navbar-nav.me-auto {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+
+            .navbar-nav:last-child {
+                margin-top: 1.5rem;
+                margin-left: 0;
+                width: 100%;
+                padding-top: 1rem;
+                border-top: 1px solid rgba(106, 62, 161, 0.1);
+            }
+
+            .navbar-nav:last-child .nav-item {
+                width: 100%;
+            }
+
+            .navbar-nav:last-child .btn {
+                margin-top: 0.5rem;
+                width: 100%;
+                display: block;
+                text-align: center;
+                justify-content: center;
+            }
+
+            .nav-link {
+                padding: 0.8rem 1rem !important;
+                border-radius: 8px;
+                margin-bottom: 0.3rem;
+                transition: all 0.3s ease;
+            }
+
+            .nav-link:hover {
+                background-color: rgba(106, 62, 161, 0.08);
+                transform: translateX(5px);
+            }
         }
 
         @media (max-width: 991px) {
@@ -183,25 +320,42 @@
             transform: translateY(-2px);
         }
 
-        /* Back to top button */
+        /* Back to top button - CORRIGIDO */
         .back-to-top {
             position: fixed;
             bottom: 25px;
             right: 25px;
-            display: none;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: var(--primary);
             color: white;
-            box-shadow: 0 2px 10px rgba(106, 62, 161, 0.3);
-            z-index: 99;
-            transition: all 0.3s;
+            border: none;
+            box-shadow: 0 4px 15px rgba(106, 62, 161, 0.4);
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
         .back-to-top:hover {
             background: var(--primary-dark);
             transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(106, 62, 161, 0.5);
+            color: white;
         }
 
         /* Accessibility */
@@ -338,6 +492,20 @@
                 font-size: 0.9rem;
                 margin-bottom: 20px;
             }
+
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        /* Adicione algum conteúdo para testar o scroll */
+        .demo-content {
+            height: 150vh;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            padding: 2rem;
         }
     </style>
     
@@ -355,7 +523,11 @@
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                 </button>
                 <div class="navbar-collapse collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
@@ -427,14 +599,23 @@
             </div>
         </nav>
     </header>
+    
     <main role="main">
         {% block content %}
         <!-- Conteúdo da página aqui -->
         <div class="container py-5">
             <h1>Sua página aqui</h1>
             <p>Este é um exemplo de conteúdo para demonstrar o footer simplificado.</p>
+            <!-- Conteúdo adicional para testar o scroll -->
+            <div class="demo-content">
+                <h2>Conteúdo de Teste</h2>
+                <p>Role para baixo para ver o botão "Voltar ao Topo" aparecer!</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            </div>
         </div>
         {% endblock %}
+        
         {% if messages %}
         <div class="messages">
             {% for message in messages %}
@@ -492,29 +673,62 @@
         </div>
     </footer>
 
-    <!-- Back to top button -->
-    <a href="#" id="back-to-top" class="back-to-top d-flex align-items-center justify-content-center">
+    <!-- Back to top button - CORRIGIDO -->
+    <button id="back-to-top" class="back-to-top" aria-label="Voltar ao topo">
         <i class="fas fa-arrow-up"></i>
-    </a>
+    </button>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/site.js' %}"></script>
 
     <script>
-        // Back to top button
-        $(window).scroll(function () {
-            if ($(this).scrollTop() > 300) {
-                $('#back-to-top').fadeIn();
-            } else {
-                $('#back-to-top').fadeOut();
+        // Back to top button - JAVASCRIPT CORRIGIDO
+        $(document).ready(function() {
+            const backToTopBtn = $('#back-to-top');
+            
+            // Mostrar/esconder botão baseado no scroll
+            $(window).scroll(function () {
+                if ($(this).scrollTop() > 300) {
+                    backToTopBtn.addClass('show');
+                } else {
+                    backToTopBtn.removeClass('show');
+                }
+            });
+
+            // Ação do clique
+            backToTopBtn.click(function (e) {
+                e.preventDefault();
+                $('html, body').animate({ 
+                    scrollTop: 0 
+                }, 500);
+                return false;
+            });
+
+            // Verificar se já deve mostrar o botão na carga da página
+            if ($(window).scrollTop() > 300) {
+                backToTopBtn.addClass('show');
             }
         });
-
-        $('#back-to-top').click(function (e) {
-            e.preventDefault();
-            $('html, body').animate({ scrollTop: 0 }, 500);
-            return false;
+        
+        $(document).ready(function() {
+            // Código existente aqui...
+            
+            // Fix para a travadinha do menu hambúrguer
+            const navbarToggler = $('.navbar-toggler');
+            const navbarCollapse = $('#navbarNav');
+            
+            // Garante que a animação funcione corretamente
+            navbarCollapse.on('show.bs.collapse', function() {
+                navbarToggler.attr('aria-expanded', 'true');
+            });
+            
+            navbarCollapse.on('hide.bs.collapse', function() {
+                navbarToggler.attr('aria-expanded', 'false');
+            });
+            
+            // Force o estado inicial correto
+            navbarToggler.attr('aria-expanded', 'false');
         });
 
         // Add animation to elements when they become visible
