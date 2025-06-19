@@ -273,7 +273,7 @@ R: Sim, implementa controles de acesso e proteção de dados pessoais.
 Para suporte técnico ou dúvidas sobre o TCC:
 
 - **Issues**: [GitHub Issues](https://github.com/seu-usuario/centro-espectro/issues)
-- **Email**: [seu-email@exemplo.com](mailto:seu-email@exemplo.com)
+- **Email**: [g.moreno.souza05@gmail.com](mailto:g.moreno.souza05@gmail.com)
 - **Documentação**: [Wiki do Projeto](https://github.com/seu-usuario/centro-espectro/wiki)
 
 ## Licença
@@ -284,5 +284,5 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 <div align="center">
   Desenvolvido por Gustavo, Carla e Giovanna para apoiar a educação inclusiva<br>
-  <strong>TCC - Curso de Gestão da Tecnologia da Informação - [Sua Instituição] - 2025</strong>
+  <strong>TCC - Curso de Gestão da Tecnologia da Informação - FATEC - 2025</strong>
 </div>
