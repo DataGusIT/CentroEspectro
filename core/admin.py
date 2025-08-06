@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CategoriaFAQ, CategoriaContato, CategoriaFerramenta, FAQ, Contato, Ferramenta, CustomUser, UserDownload, UserSavedFAQ
+from .models import CategoriaFAQ, CategoriaContato, CategoriaFerramenta, FAQ, Contato, Ferramenta, CustomUser, UserDownload, UserSavedFAQ, FotoContato, UserSavedContato
 
 # =============================================================================
 # ADMINISTRAÇÃO DE USUÁRIOS
@@ -67,25 +67,80 @@ class CategoriaContatoAdmin(admin.ModelAdmin):
     list_display = ('nome', 'icone')
     search_fields = ('nome',)
 
+class FotoContatoInline(admin.TabularInline):
+    model = FotoContato
+    extra = 1
+    fields = ('imagem', 'legenda', 'ordem')
+
 @admin.register(Contato)
 class ContatoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'categoria', 'cidade', 'estado', 'telefone')
+    list_display = ('nome', 'categoria', 'cidade', 'estado', 'telefone', 'email')
     list_filter = ('categoria', 'estado', 'atendimento_presencial', 'atendimento_online')
-    search_fields = ('nome', 'descricao', 'cidade', 'rua', 'bairro', 'cep')
+    search_fields = ('nome', 'descricao', 'cidade', 'rua', 'bairro', 'cep', 'email')
+    
     fieldsets = (
         ('Informações Básicas', {
             'fields': ('nome', 'descricao', 'imagem', 'categoria')
         }),
         ('Endereço', {
-            'fields': ('rua', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep')
+            'fields': ('rua', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep'),
+            'classes': ('collapse',)  # Seção recolhível para economizar espaço
         }),
         ('Contato', {
-            'fields': ('telefone', 'horario_funcionamento')
+            'fields': ('telefone', 'email', 'site', 'horario_funcionamento')
+        }),
+        ('Redes Sociais', {
+            'fields': ('whatsapp', 'facebook', 'instagram', 'linkedin', 'youtube'),
+            'classes': ('collapse',)
         }),
         ('Tipo de Atendimento', {
             'fields': ('atendimento_presencial', 'atendimento_online')
         }),
+        ('Informações Adicionais', {
+            'fields': ('especialidades', 'convenios', 'observacoes'),
+            'classes': ('collapse',)
+        }),
     )
+    
+    inlines = [FotoContatoInline]
+
+# Se você quiser registrar o modelo FotoContato separadamente também
+@admin.register(FotoContato)
+class FotoContatoAdmin(admin.ModelAdmin):
+    list_display = ('contato', 'legenda', 'ordem')
+    list_filter = ('contato',)
+    search_fields = ('contato__nome', 'legenda')
+    ordering = ('contato', 'ordem')
+
+@admin.register(UserSavedContato)
+class UserSavedContatoAdmin(admin.ModelAdmin):
+    list_display = ('user', 'get_contato_nome', 'get_categoria', 'data_salva')
+    list_filter = ('data_salva', 'contato__categoria')
+    search_fields = ('user__username', 'user__email', 'contato__nome')
+    readonly_fields = ('data_salva',)
+    date_hierarchy = 'data_salva'
+    
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'contato')
+        }),
+        ('Informações de Data', {
+            'fields': ('data_salva',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    @admin.display(description='Nome do Contato', ordering='contato__nome')
+    def get_contato_nome(self, obj):
+        return obj.contato.nome
+    
+    @admin.display(description='Categoria', ordering='contato__categoria__nome')
+    def get_categoria(self, obj):
+        return obj.contato.categoria.nome if obj.contato.categoria else 'Sem categoria'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'contato', 'contato__categoria')
+
 
 # =============================================================================
 # ADMINISTRAÇÃO DE FERRAMENTAS
@@ -111,3 +166,4 @@ class UserDownloadAdmin(admin.ModelAdmin):
     list_display = ('user', 'ferramenta', 'data_download')
     list_filter = ('data_download',)
     search_fields = ('user__username', 'ferramenta__nome')
+

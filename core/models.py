@@ -100,22 +100,39 @@ class CategoriaContato(CategoriaBase):
 class Contato(models.Model):
     nome = models.CharField(max_length=200)
     descricao = models.TextField()
-    # Alteração: Substituir campo imagem_url por ImageField
     imagem = models.ImageField(upload_to='static/img/', blank=True, null=True)    
-    # Campos de endereço melhorados
+    
+    # Campos de endereço
     rua = models.CharField(max_length=200, blank=True, null=True)
     numero = models.CharField(max_length=20, blank=True, null=True)
     complemento = models.CharField(max_length=100, blank=True, null=True)
     bairro = models.CharField(max_length=100, blank=True, null=True)
     cidade = models.CharField(max_length=100)
     estado = models.CharField(max_length=50)
-    cep = models.CharField(max_length=9, blank=True, null=True)  # Formato: 00000-000
+    cep = models.CharField(max_length=9, blank=True, null=True)
     
+    # Contato
     telefone = models.CharField(max_length=20)
+    email = models.EmailField(blank=True, null=True)
+    site = models.URLField(blank=True, null=True)
     horario_funcionamento = models.CharField(max_length=100)
+    
+    # Redes sociais
+    facebook = models.URLField(blank=True, null=True)
+    instagram = models.URLField(blank=True, null=True)
+    whatsapp = models.CharField(max_length=20, blank=True, null=True, help_text="Número com código do país (ex: 5511999999999)")
+    linkedin = models.URLField(blank=True, null=True)
+    youtube = models.URLField(blank=True, null=True)
+    
+    # Galeria de fotos - será uma relação com outro modelo
     categoria = models.ForeignKey(CategoriaContato, on_delete=models.CASCADE, related_name='contatos', null=True, blank=True)
     atendimento_presencial = models.BooleanField(default=True)
     atendimento_online = models.BooleanField(default=False)
+    
+    # Campos adicionais para melhor experiência
+    especialidades = models.TextField(blank=True, null=True, help_text="Liste as especialidades separadas por vírgula")
+    convenios = models.TextField(blank=True, null=True, help_text="Convênios aceitos")
+    observacoes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.nome
@@ -135,10 +152,66 @@ class Contato(models.Model):
         if self.cep:
             endereco.append(f"CEP: {self.cep}")
         return " - ".join(endereco)
+    
+    def endereco_para_maps(self):
+        """Retorna endereço formatado para Google Maps"""
+        endereco_parts = []
+        if self.rua:
+            endereco_parts.append(self.rua)
+            if self.numero:
+                endereco_parts.append(self.numero)
+        if self.bairro:
+            endereco_parts.append(self.bairro)
+        endereco_parts.extend([self.cidade, self.estado])
+        return ", ".join(endereco_parts)
 
     class Meta:
         verbose_name = 'Contato'
         verbose_name_plural = 'Contatos'
+    
+class UserSavedContato(models.Model):
+    user = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.CASCADE, 
+        related_name='saved_contatos',
+        verbose_name='Usuário'
+    )
+    contato = models.ForeignKey(
+        'Contato', 
+        on_delete=models.CASCADE, 
+        related_name='saved_by_users',
+        verbose_name='Contato'
+    )
+    data_salva = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Data de Salvamento'
+    )
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.contato.nome}"
+    
+    class Meta:
+        verbose_name = 'Contato Salvo'
+        verbose_name_plural = 'Contatos Salvos'
+        ordering = ['-data_salva']
+        unique_together = ['user', 'contato']  # Evita duplicatas
+        indexes = [
+            models.Index(fields=['user', '-data_salva']),
+            models.Index(fields=['contato']),
+        ]
+    
+
+# Modelo para galeria de fotos do contato
+class FotoContato(models.Model):
+    contato = models.ForeignKey(Contato, on_delete=models.CASCADE, related_name='fotos')
+    imagem = models.ImageField(upload_to='static/img/contatos/')
+    legenda = models.CharField(max_length=200, blank=True, null=True)
+    ordem = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['ordem']
+        verbose_name = 'Foto do Contato'
+        verbose_name_plural = 'Fotos dos Contatos'
 
 # =============================================================================
 # MODELOS RELACIONADOS A FERRAMENTAS
@@ -179,3 +252,4 @@ class UserDownload(models.Model):
         verbose_name = 'Download'
         verbose_name_plural = 'Downloads'
         ordering = ['-data_download']
+

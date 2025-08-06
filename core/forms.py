@@ -1,9 +1,5 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import login
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.core.exceptions import ValidationError
 from .models import CustomUser
 
 # =============================================================================
@@ -69,20 +65,6 @@ class CustomUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ['first_name', 'last_name', 'username', 'email', 'password1', 'password2']
 
-    def clean_email(self):
-        """Valida se o e-mail já existe no banco de dados"""
-        email = self.cleaned_data.get('email')
-        if CustomUser.objects.filter(email=email).exists():
-            raise ValidationError("Este e-mail já está em uso. Escolha outro e-mail.")
-        return email
-
-    def clean_username(self):
-        """Valida se o nome de usuário já existe (método adicional para personalizar mensagem)"""
-        username = self.cleaned_data.get('username')
-        if CustomUser.objects.filter(username=username).exists():
-            raise ValidationError("Este nome de usuário já está em uso. Escolha outro nome de usuário.")
-        return username
-
 class CustomAuthenticationForm(AuthenticationForm):
     """Formulário de autenticação customizado"""
     username = forms.CharField(
@@ -130,17 +112,3 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = ['first_name', 'last_name', 'email']
-
-    def clean_email(self):
-        """Valida se o e-mail já existe (exceto para o usuário atual)"""
-        email = self.cleaned_data.get('email')
-        # Verifica se há outro usuário com este e-mail (exceto o usuário atual)
-        if self.instance and self.instance.pk:
-            if CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
-                raise ValidationError("Este e-mail já está em uso por outro usuário.")
-        else:
-            if CustomUser.objects.filter(email=email).exists():
-                raise ValidationError("Este e-mail já está em uso.")
-        return email
-
-
