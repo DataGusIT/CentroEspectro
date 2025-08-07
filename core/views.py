@@ -17,7 +17,7 @@ from django.views.decorators.http import require_POST
 import json
 import logging
 from django.db.models import Q, Count 
-
+from collections import OrderedDict
 
 # =============================================================================
 # FUNÇÕES AUXILIARES
@@ -302,51 +302,64 @@ def remover_faq_salva(request, faq_id):
 
 def contatos(request):
     """
-    Lista Contatos com paginação de CATEGORIAS (3 por página),
-    exibindo um máximo de 6 contatos por categoria.
+    Lista Contatos com paginação aninhada:
+    - Paginação principal para CATEGORIAS (3 por página).
+    - Paginação secundária para CONTATOS dentro de cada categoria (3 por página).
     """
-    # 1. PEGAR APENAS CATEGORIAS QUE TÊM CONTATOS PARA PAGINAR
-    # Esta é a lógica correta: ela evita paginar categorias vazias.
-    categorias_para_paginar = CategoriaContato.objects.annotate(
+    # 1. PAGINAÇÃO PRINCIPAL (CATEGORIAS)
+    categorias_com_contatos = CategoriaContato.objects.annotate(
         num_contatos=Count('contatos')
     ).filter(num_contatos__gt=0).order_by('nome')
+    
+    main_paginator = Paginator(categorias_com_contatos, 3)
+    main_page_number = request.GET.get('page')
+    main_page_obj = main_paginator.get_page(main_page_number)
+    categorias_na_pagina = main_page_obj.object_list
 
-    # 2. APLICAR O PAGINATOR À LISTA CORRETA DE CATEGORIAS
-    paginator = Paginator(categorias_para_paginar, 3)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    # 3. BUSCAR OS CONTATOS APENAS PARA AS CATEGORIAS DA PÁGINA ATUAL
-    categorias_na_pagina = page_obj.object_list
-    contatos_da_pagina = Contato.objects.filter(
+    # 2. BUSCAR TODOS OS CONTATOS PARA AS CATEGORIAS DA PÁGINA ATUAL
+    todos_contatos_da_pagina = Contato.objects.filter(
         categoria__in=categorias_na_pagina
-    ).select_related('categoria')
-
-    # 4. AGRUPAR OS CONTATOS TEMPORARIAMENTE
+    ).order_by('nome')
+    
     contatos_agrupados = defaultdict(list)
-    for contato in contatos_da_pagina:
+    for contato in todos_contatos_da_pagina:
         contatos_agrupados[contato.categoria].append(contato)
-        
-    # 5. CONSTRUIR O DICIONÁRIO FINAL, MANTENDO A ORDEM E APLICANDO O LIMITE DE 6
-    dados_pagina_atual = {}
-    for categoria in categorias_na_pagina:
-        lista_limitada = contatos_agrupados.get(categoria, [])[:6]
-        dados_pagina_atual[categoria] = lista_limitada
 
-    # 6. BUSCAR CONTATOS SALVOS PELO USUÁRIO LOGADO
+    # 3. CRIAR PAGINADORES ANINHADOS PARA CADA CATEGORIA
+    # Usamos um OrderedDict para manter a ordem da paginação principal.
+    dados_pagina_atual = OrderedDict()
+    for categoria in categorias_na_pagina:
+        lista_de_contatos = contatos_agrupados.get(categoria, [])
+        
+        # Cria um paginador específico para os contatos desta categoria
+        contato_paginator = Paginator(lista_de_contatos, 3) # 3 contatos por página
+        
+        # Cria um nome de parâmetro de URL único para este paginador
+        query_param_name = f"cat_{categoria.id}_page"
+        contato_page_number = request.GET.get(query_param_name)
+        
+        # Pega o objeto da página de contatos para esta categoria
+        contato_page_obj = contato_paginator.get_page(contato_page_number)
+        
+        dados_pagina_atual[categoria] = {
+            'contatos_page_obj': contato_page_obj,
+            'query_param_name': query_param_name
+        }
+
+    # 4. BUSCAR CONTATOS SALVOS PELO USUÁRIO
     contatos_salvos_ids = []
     if request.user.is_authenticated:
         contatos_salvos_ids = list(UserSavedContato.objects.filter(
             user=request.user
         ).values_list('contato_id', flat=True))
 
-    # 7. PREPARAR O CONTEXTO FINAL
+    # 5. PREPARAR O CONTEXTO FINAL
     context = {
         'title': 'Contatos',
         'contatos_por_categoria_paginada': dados_pagina_atual,
-        'page_obj': page_obj,
+        'page_obj': main_page_obj,  # Paginador principal
         'contatos_salvos_ids': contatos_salvos_ids,
-        'sem_contatos': not categorias_para_paginar.exists()
+        'sem_contatos': not categorias_com_contatos.exists()
     }
     
     return render(request, 'core/contatos.html', context)

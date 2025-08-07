@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load query_tags %}
 
 {% block content %}
 
@@ -111,134 +112,119 @@
 
         {# Verificação se há algum conteúdo para mostrar #}
         {% if contatos_por_categoria_paginada %}
-
+            
             {# Loop principal pelas categorias da página #}
-            {% for categoria, contatos_list in contatos_por_categoria_paginada.items %}
-                {# Só mostra o bloco da categoria se ela tiver contatos #}
-                {% if contatos_list %}
-                    <div class="contato-category mb-5" id="{{ categoria.nome|lower|slugify }}">
-                        <div class="category-header">
-                            <div class="category-icon">
-                                <i class="{{ categoria.icone }} text-primary fs-3"></i>
+            {% for categoria, dados in contatos_por_categoria_paginada.items %}
+                {% with contatos_page_obj=dados.contatos_page_obj query_param_name=dados.query_param_name %}
+
+                    {# Só exibe a categoria se ela tiver contatos nesta página #}
+                    {% if contatos_page_obj %}
+                        <div class="contato-category mb-5" id="{{ categoria.nome|lower|slugify }}">
+                            <div class="category-header">
+                                <div class="category-icon">
+                                    <i class="{{ categoria.icone }} text-primary fs-3"></i>
+                                </div>
+                                <h3 class="mb-0">{{ categoria.nome }}</h3>
                             </div>
-                            <h3 class="mb-0">{{ categoria.nome }}</h3>
-                        </div>
 
-                    <div class="row g-4">
-                        {# Loop pelos contatos (já limitados a 6 pela view) #}
-                        {% for contato in contatos_list %}
-                            <div class="col-md-6 col-lg-4 contato-item">
-                                <div class="card h-100 border-0 shadow-sm hover-card">
-                                    
-                                    <div class="card-img-top position-relative">
-                                        {% if contato.imagem %}
-                                            <img src="{{ contato.imagem.url }}" 
-                                                 alt="{{ contato.nome }}" 
-                                                 class="img-fluid rounded-top"
-                                                 style="height: 200px; width: 100%; object-fit: cover;">
-                                        {% else %}
-                                            <img src="{% static 'img/default-contact.jpg' %}" 
-                                                 alt="{{ contato.nome }}"
-                                                 class="img-fluid rounded-top" 
-                                                 style="height: 200px; width: 100%; object-fit: cover;">
-                                        {% endif %}
-                                        
-                                        {% if user.is_authenticated %}
-                                            {% if contato.id in contatos_salvos_ids %}
-                                                <button type="button" 
-                                                        class="btn btn-save-contact saved"
-                                                        data-contato-id="{{ contato.id }}"
-                                                        onclick="removerContato({{ contato.id }})"
-                                                        title="Remover dos salvos">
-                                                    <i class="fas fa-bookmark"></i>
-                                                </button>
-                                            {% else %}
-                                                <button type="button" 
-                                                        class="btn btn-save-contact"
-                                                        data-contato-id="{{ contato.id }}"
-                                                        onclick="salvarContato({{ contato.id }})"
-                                                        title="Salvar contato">
-                                                    <i class="far fa-bookmark"></i>
-                                                </button>
-                                            {% endif %}
-                                        {% else %}
-                                            <button type="button" 
-                                                    class="btn btn-save-contact"
-                                                    onclick="showLoginRequired()"
-                                                    title="Faça login para salvar">
-                                                <i class="far fa-bookmark"></i>
-                                            </button>
-                                        {% endif %}
-
-                                        <div class="position-absolute bottom-0 start-0 p-3">
-                                            <span class="badge bg-primary">{{ contato.categoria.nome }}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h5 class="card-title mb-0">{{ contato.nome }}</h5>
-                                        </div>
-                                        
-                                        <p class="card-text text-muted mb-3">
-                                            {{ contato.descricao|truncatechars:80 }}
-                                        </p>
-
-                                        <div class="contact-info-item mb-2">
-                                            <div class="contact-info-icon">
-                                                <i class="fas fa-map-marker-alt text-primary"></i>
-                                            </div>
-                                            <small>
-                                                {% if contato.rua %}
-                                                    {{ contato.rua }}{% if contato.numero %}, {{ contato.numero }}{% endif %}
-                                                    {% if contato.bairro %} - {{ contato.bairro }}{% endif %}<br>
+                            <div class="row g-4">
+                                {# Loop pelos contatos DA PÁGINA DE CONTATOS ATUAL #}
+                                {% for contato in contatos_page_obj %}
+                                    <div class="col-md-6 col-lg-4 contato-item">
+                                        <div class="card h-100 border-0 shadow-sm hover-card">
+                                            
+                                            <div class="card-img-top position-relative">
+                                                {% if contato.imagem %}
+                                                    <img src="{{ contato.imagem.url }}" alt="{{ contato.nome }}" class="img-fluid rounded-top" style="height: 200px; width: 100%; object-fit: cover;">
+                                                {% else %}
+                                                    <img src="{% static 'img/default-contact.jpg' %}" alt="{{ contato.nome }}" class="img-fluid rounded-top" style="height: 200px; width: 100%; object-fit: cover;">
                                                 {% endif %}
-                                                {{ contato.cidade }}, {{ contato.estado }}
-                                                {% if contato.cep %}<br>CEP: {{ contato.cep }}{% endif %}
-                                            </small>
-                                        </div>
-                                        <div class="contact-info-item mb-2">
-                                            <div class="contact-info-icon">
-                                                <i class="fas fa-phone text-primary"></i>
-                                            </div>
-                                            <small>{{ contato.telefone }}</small>
-                                        </div>
-                                        <div class="contact-info-item mb-3">
-                                            <div class="contact-info-icon">
-                                                <i class="fas fa-clock text-primary"></i>
-                                            </div>
-                                            <small>{{ contato.horario_funcionamento }}</small>
-                                        </div>
+                                                
+                                                {% if user.is_authenticated %}
+                                                    {% if contato.id in contatos_salvos_ids %}
+                                                        <button type="button" class="btn btn-save-contact saved" data-contato-id="{{ contato.id }}" onclick="removerContato({{ contato.id }})" title="Remover dos salvos"><i class="fas fa-bookmark"></i></button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-save-contact" data-contato-id="{{ contato.id }}" onclick="salvarContato({{ contato.id }})" title="Salvar contato"><i class="far fa-bookmark"></i></button>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <button type="button" class="btn btn-save-contact" onclick="showLoginRequired()" title="Faça login para salvar"><i class="far fa-bookmark"></i></button>
+                                                {% endif %}
 
-                                        <div class="card-action-area">
-                                            <div class="mb-3">
-                                                {% if contato.atendimento_presencial %}
-                                                    <span class="badge bg-success me-1">
-                                                        <i class="fas fa-building me-1"></i>Presencial
-                                                    </span>
-                                                {% endif %}
-                                                {% if contato.atendimento_online %}
-                                                    <span class="badge bg-info">
-                                                        <i class="fas fa-laptop me-1"></i>Online
-                                                    </span>
-                                                {% endif %}
+                                                <div class="position-absolute bottom-0 start-0 p-3">
+                                                    <span class="badge bg-primary">{{ contato.categoria.nome }}</span>
+                                                </div>
                                             </div>
                                             
-                                            <div class="d-flex gap-2 flex-wrap">
-                                                <a href="{% url 'detalhes_contato' contato.id %}" 
-                                                   class="btn btn-sm btn-outline-primary flex-fill">
-                                                    <i class="fas fa-eye me-1"></i>Ver detalhes
-                                                </a>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="card-title mb-0">{{ contato.nome }}</h5></div>
+                                                <p class="card-text text-muted mb-3">{{ contato.descricao|truncatechars:80 }}</p>
+                                                <div class="contact-info-item mb-2">
+                                                    <div class="contact-info-icon"><i class="fas fa-map-marker-alt text-primary"></i></div>
+                                                    <small>
+                                                        {% if contato.rua %}{{ contato.rua }}{% if contato.numero %}, {{ contato.numero }}{% endif %}{% if contato.bairro %} - {{ contato.bairro }}{% endif %}<br>{% endif %}
+                                                        {{ contato.cidade }}, {{ contato.estado }}{% if contato.cep %}<br>CEP: {{ contato.cep }}{% endif %}
+                                                    </small>
+                                                </div>
+                                                <div class="contact-info-item mb-2">
+                                                    <div class="contact-info-icon"><i class="fas fa-phone text-primary"></i></div>
+                                                    <small>{{ contato.telefone }}</small>
+                                                </div>
+                                                <div class="contact-info-item mb-3">
+                                                    <div class="contact-info-icon"><i class="fas fa-clock text-primary"></i></div>
+                                                    <small>{{ contato.horario_funcionamento }}</small>
+                                                </div>
+                                                <div class="card-action-area">
+                                                    <div class="mb-3">
+                                                        {% if contato.atendimento_presencial %}<span class="badge bg-success me-1"><i class="fas fa-building me-1"></i>Presencial</span>{% endif %}
+                                                        {% if contato.atendimento_online %}<span class="badge bg-info"><i class="fas fa-laptop me-1"></i>Online</span>{% endif %}
+                                                    </div>
+                                                    <div class="d-flex gap-2 flex-wrap"><a href="{% url 'detalhes_contato' contato.id %}" class="btn btn-sm btn-outline-primary flex-fill"><i class="fas fa-eye me-1"></i>Ver detalhes</a></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                {% endfor %}
                             </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+
+                            <!-- ============================================= -->
+                            <!--      PAGINAÇÃO DOS CONTATOS (ANINHADA)      -->
+                            <!-- ============================================= -->
+                            <!-- PAGINAÇÃO DOS CONTATOS (ANINHADA) - VERSÃO CORRIGIDA -->
+                            {% if contatos_page_obj.paginator.num_pages > 1 %}
+                            <nav aria-label="Navegação de contatos para {{ categoria.nome }}" class="mt-4">
+                                <ul class="pagination pagination-sm justify-content-center">
+                                    {% if contatos_page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% build_query query_param_name contatos_page_obj.previous_page_number %}">&laquo;</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">&laquo;</a></li>
+                                    {% endif %}
+
+                                    {% for i in contatos_page_obj.paginator.page_range %}
+                                        {% if contatos_page_obj.number == i %}
+                                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                        {% else %}
+                                            <li class="page-item"><a class="page-link" href="?{% build_query query_param_name i %}">{{ i }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if contatos_page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% build_query query_param_name contatos_page_obj.next_page_number %}">&raquo;</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">&raquo;</a></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                            <!-- ============================================= -->
+                        </div>
+                    {% endif %}
+                {% endwith %}
             {% endfor %}
-            <br
+
             <!-- =============================================================================
                CONTROLES DE PAGINAÇÃO
                ============================================================================= -->
@@ -295,8 +281,7 @@
                         <i class="fas fa-info-circle fa-2x mb-3"></i>
                         <h4>Nenhum contato encontrado</h4>
                         <p class="mb-0">
-                            Não há contatos cadastrados no momento. Entre em contato com o administrador para mais
-                            informações.
+                            Não há contatos cadastrados no momento. Entre em contato com o administrador para mais informações.
                         </p>
                     </div>
                 </div>
@@ -308,16 +293,8 @@
                 <div class="card cta-card border-0 shadow">
                     <div class="card-body p-5 text-center text-white">
                         <h4 class="mb-3">Conhece algum profissional ou instituição especializada?</h4>
-                        <p class="mb-4">
-                            Ajude a ampliar nossa rede de apoio indicando contatos que possam auxiliar
-                            famílias e pessoas com TEA.
-                        </p>
-                        <button type="button" 
-                                class="btn cta-btn" 
-                                data-bs-toggle="modal"
-                                data-bs-target="#sugerirContatoModal">
-                            <i class="fas fa-plus-circle me-2"></i>Sugerir contato
-                        </button>
+                        <p class="mb-4">Ajude a ampliar nossa rede de apoio indicando contatos que possam auxiliar famílias e pessoas com TEA.</p>
+                        <button type="button" class="btn cta-btn" data-bs-toggle="modal" data-bs-target="#sugerirContatoModal"><i class="fas fa-plus-circle me-2"></i>Sugerir contato</button>
                     </div>
                 </div>
             </div>
