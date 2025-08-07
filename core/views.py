@@ -103,50 +103,53 @@ def register_download(request, ferramenta_id):
 
 def duvidas(request):
     """
-    Lista FAQs com paginação de CATEGORIAS (3 por página) e botão "Ver Mais" para as dúvidas.
+    Lista FAQs com paginação aninhada:
+    - Paginação principal para TODAS as CATEGORIAS (3 por página).
+    - Paginação secundária para DÚVIDAS dentro de cada categoria (4 por página).
     """
     # 1. CAPTURAR TERMO DE PESQUISA
     termo_pesquisa = request.POST.get('termo', request.GET.get('termo', ''))
 
-    # 2. PAGINAR TODAS AS CATEGORIAS DE FAQ EXISTENTES
-    # Esta é a correção principal: paginamos TODAS as categorias, não apenas as que têm conteúdo.
+    # 2. PAGINAÇÃO PRINCIPAL (CATEGORIAS)
+    # CORREÇÃO: Paginamos TODAS as categorias, sem filtrar as vazias.
     todas_categorias = CategoriaFAQ.objects.all().order_by('nome')
-    paginator = Paginator(todas_categorias, 3)  # 3 categorias por página
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
 
-    # 3. BUSCAR AS FAQS SOMENTE PARA AS CATEGORIAS DA PÁGINA ATUAL
-    # Isso otimiza a busca no banco de dados.
-    categorias_na_pagina = page_obj.object_list
+    main_paginator = Paginator(todas_categorias, 3)
+    main_page_number = request.GET.get('page')
+    main_page_obj = main_paginator.get_page(main_page_number)
+    categorias_na_pagina = main_page_obj.object_list
+
+    # 3. BUSCAR TODAS AS FAQS PARA AS CATEGORIAS DA PÁGINA ATUAL
     faqs_da_pagina = FAQ.objects.filter(
         categoria__in=categorias_na_pagina
-    ).select_related('categoria')
-
-    # Se houver pesquisa, aplicamos um filtro adicional sobre as FAQs já carregadas
+    ).select_related('categoria').order_by('pergunta')
+    
     if termo_pesquisa:
         faqs_da_pagina = faqs_da_pagina.filter(
             Q(pergunta__icontains=termo_pesquisa) | 
             Q(resposta__icontains=termo_pesquisa)
         )
-
-    # 4. AGRUPAR AS FAQS ENCONTRADAS POR CATEGORIA
-    # E preparar os dados para o template, incluindo o total para o "Ver Mais".
-    dados_pagina_atual = {}
     
-    # Primeiro, criamos um dicionário temporário para agrupar as FAQs
     faqs_agrupadas = defaultdict(list)
     for faq in faqs_da_pagina:
         faqs_agrupadas[faq.categoria].append(faq)
-    
-    # Agora, montamos o dicionário final na ordem correta da paginação
+
+    # 4. CRIAR PAGINADORES ANINHADOS PARA CADA CATEGORIA
+    dados_pagina_atual = OrderedDict()
     for categoria in categorias_na_pagina:
-        faqs_list = faqs_agrupadas.get(categoria, [])
+        lista_de_faqs = faqs_agrupadas.get(categoria, [])
+        
+        faq_paginator = Paginator(lista_de_faqs, 4) # 4 dúvidas por página
+        query_param_name = f"faq_cat_{categoria.id}_page"
+        faq_page_number = request.GET.get(query_param_name)
+        faq_page_obj = faq_paginator.get_page(faq_page_number)
+        
         dados_pagina_atual[categoria] = {
-            'faqs': faqs_list,
-            'total_count': len(faqs_list)
+            'faqs_page_obj': faq_page_obj,
+            'query_param_name': query_param_name
         }
 
-    # 5. OBTER IDS DAS FAQS SALVAS PELO USUÁRIO LOGADO
+    # 5. OBTER IDS DAS FAQS SALVAS PELO USUÁRIO
     faqs_salvas_ids = []
     if request.user.is_authenticated:
         faqs_salvas_ids = list(UserSavedFAQ.objects.filter(
@@ -156,7 +159,7 @@ def duvidas(request):
     # 6. PREPARAR O CONTEXTO FINAL
     context = {
         'faqs_por_categoria_paginada': dados_pagina_atual,
-        'page_obj': page_obj,  # Este objeto agora está correto
+        'page_obj': main_page_obj,
         'termo_pesquisa': termo_pesquisa,
         'faqs_salvas_ids': faqs_salvas_ids,
     }
