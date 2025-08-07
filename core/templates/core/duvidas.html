@@ -48,11 +48,12 @@
                             {% csrf_token %}
                             <div class="input-group">
                                 <input type="text" 
-                                       name="termo" 
-                                       class="form-control"
-                                       placeholder="O que você quer saber?" 
-                                       value="{{ termo_pesquisa }}"
-                                       aria-label="Termo de pesquisa">
+                                name="termo" 
+                                class="form-control"
+                                placeholder="O que você quer saber?" 
+                                value="{{ termo_pesquisa }}"
+                                aria-label="Termo de pesquisa"
+                                autocomplete="off">  {# << ADICIONE ESTA LINHA #}
                                 <button class="btn btn-primary" type="submit">
                                     <i class="fas fa-search me-2"></i> Pesquisar
                                 </button>
@@ -64,54 +65,29 @@
         </div>
 
         {# Verificação se existem FAQs para exibir #}
-        {% if faqs_por_categoria %}
-            
-            <!-- =============================================================================
-               NAVEGAÇÃO POR CATEGORIAS
-               ============================================================================= -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <nav class="faq-nav d-flex justify-content-center flex-wrap">
-                        {% for categoria in faqs_por_categoria.keys %}
-                            <a href="#{{ categoria|lower|slugify }}" class="btn btn-sm btn-outline-primary m-1">
-                                {{ categoria }}
-                            </a>
-                        {% endfor %}
-                    </nav>
-                </div>
-            </div>
+        {% if faqs_por_categoria_paginada %}
 
             <!-- =============================================================================
                ACORDEÕES DE FAQ POR CATEGORIA
                ============================================================================= -->
             <div class="row">
                 <div class="col-lg-10 mx-auto">
-                    {% for categoria, faqs in faqs_por_categoria.items %}
-                        <div class="mb-5" id="{{ categoria|lower|slugify }}">
+                    {# O loop agora usa a variável paginada #}
+                    {% for categoria, dados in faqs_por_categoria_paginada.items %}
+                        <div class="mb-5" id="{{ categoria.nome|lower|slugify }}">
                             
                             {# Cabeçalho da categoria com ícone #}
                             <div class="d-flex align-items-center mb-4">
                                 <div class="feature-icon me-3">
-                                    {% if categoria == "Geral" %}
-                                        <i class="fas fa-info-circle"></i>
-                                    {% elif categoria == "Diagnóstico" %}
-                                        <i class="fas fa-stethoscope"></i>
-                                    {% elif categoria == "Tratamento" %}
-                                        <i class="fas fa-heartbeat"></i>
-                                    {% elif categoria == "Apoio" %}
-                                        <i class="fas fa-hands-helping"></i>
-                                    {% elif categoria == "Conceitos" %}
-                                        <i class="fas fa-book"></i>
-                                    {% else %}
-                                        <i class="fas fa-question-circle"></i>
-                                    {% endif %}
+                                    <i class="{{ categoria.icone }}"></i>
                                 </div>
-                                <h3 class="feature-title mb-0">{{ categoria }}</h3>
+                                <h3 class="feature-title mb-0">{{ categoria.nome }}</h3>
                             </div>
 
                             {# Acordeão com as FAQs da categoria #}
-                            <div class="accordion shadow-sm" id="accordion{{ categoria|slugify }}">
-                                {% for faq in faqs %}
+                            <div class="accordion shadow-sm" id="accordion{{ categoria.nome|slugify }}">
+                                {# O loop interno agora acessa dados.faqs #}
+                                {% for faq in dados.faqs %}
                                     <div class="accordion-item border-0 mb-3 rounded-3 overflow-hidden">
                                         
                                         {# Cabeçalho do item FAQ com botão de salvar #}
@@ -171,6 +147,55 @@
                     {% endfor %}
                 </div>
             </div>
+
+            <!-- =============================================================================
+               CONTROLES DE PAGINAÇÃO
+               ============================================================================= -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Navegação das páginas">
+                <ul class="pagination justify-content-center">
+                    
+                    {# Botão Anterior #}
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {# Números das Páginas #}
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li class="page-item active" aria-current="page"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {# Botão Próximo #}
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Próximo">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         
         {% else %}
             <!-- =============================================================================

@@ -109,29 +109,23 @@
             </div>
         </div>
 
-        {% if contatos_por_categoria %}
-            <div class="row mb-4">
-                <div class="col-12">
-                    <nav class="contact-nav d-flex justify-content-center flex-wrap">
-                        {% for categoria_nome in contatos_por_categoria.keys %}
-                            <a href="#{{ categoria_nome|lower|slugify }}" class="btn btn-sm btn-outline-primary m-1">
-                                {{ categoria_nome }}
-                            </a>
-                        {% endfor %}
-                    </nav>
-                </div>
-            </div>
+        {# Verificação se há algum conteúdo para mostrar #}
+        {% if contatos_por_categoria_paginada %}
 
-            {% for categoria_nome, contatos_list in contatos_por_categoria.items %}
-                <div class="contato-category mb-5" id="{{ categoria_nome|lower|slugify }}">
-                    <div class="category-header">
-                        <div class="category-icon">
-                            <i class="fas fa-building text-primary fs-3"></i>
+            {# Loop principal pelas categorias da página #}
+            {% for categoria, contatos_list in contatos_por_categoria_paginada.items %}
+                {# Só mostra o bloco da categoria se ela tiver contatos #}
+                {% if contatos_list %}
+                    <div class="contato-category mb-5" id="{{ categoria.nome|lower|slugify }}">
+                        <div class="category-header">
+                            <div class="category-icon">
+                                <i class="{{ categoria.icone }} text-primary fs-3"></i>
+                            </div>
+                            <h3 class="mb-0">{{ categoria.nome }}</h3>
                         </div>
-                        <h3 class="mb-0">{{ categoria_nome }}</h3>
-                    </div>
 
                     <div class="row g-4">
+                        {# Loop pelos contatos (já limitados a 6 pela view) #}
                         {% for contato in contatos_list %}
                             <div class="col-md-6 col-lg-4 contato-item">
                                 <div class="card h-100 border-0 shadow-sm hover-card">
@@ -242,8 +236,57 @@
                             </div>
                         {% endfor %}
                     </div>
-                </div>
+                {% endif %}
             {% endfor %}
+            <br
+            <!-- =============================================================================
+               CONTROLES DE PAGINAÇÃO
+               ============================================================================= -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Navegação das páginas">
+                <ul class="pagination justify-content-center">
+                    
+                    {# Botão Anterior #}
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {# Números das Páginas #}
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li class="page-item active" aria-current="page"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {# Botão Próximo #}
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Próximo">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
 
         {% else %}
             <div class="row">

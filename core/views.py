@@ -16,6 +16,8 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 import json
 import logging
+from django.db.models import Q, Count 
+
 
 # =============================================================================
 # FUNÇÕES AUXILIARES
@@ -100,42 +102,63 @@ def register_download(request, ferramenta_id):
 # =============================================================================
 
 def duvidas(request):
-    """Lista todas as FAQs organizadas por categoria com funcionalidade de busca"""
-    # Busca todas as categorias e FAQs
-    categorias = CategoriaFAQ.objects.all()
-    faqs_por_categoria = defaultdict(list)
-    
-    # Verifica se há um termo de pesquisa
-    termo_pesquisa = request.GET.get('termo', '')
-    if request.method == 'POST':
-        termo_pesquisa = request.POST.get('termo', '')
-    
+    """
+    Lista FAQs com paginação de CATEGORIAS (3 por página) e botão "Ver Mais" para as dúvidas.
+    """
+    # 1. CAPTURAR TERMO DE PESQUISA
+    termo_pesquisa = request.POST.get('termo', request.GET.get('termo', ''))
+
+    # 2. PAGINAR TODAS AS CATEGORIAS DE FAQ EXISTENTES
+    # Esta é a correção principal: paginamos TODAS as categorias, não apenas as que têm conteúdo.
+    todas_categorias = CategoriaFAQ.objects.all().order_by('nome')
+    paginator = Paginator(todas_categorias, 3)  # 3 categorias por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 3. BUSCAR AS FAQS SOMENTE PARA AS CATEGORIAS DA PÁGINA ATUAL
+    # Isso otimiza a busca no banco de dados.
+    categorias_na_pagina = page_obj.object_list
+    faqs_da_pagina = FAQ.objects.filter(
+        categoria__in=categorias_na_pagina
+    ).select_related('categoria')
+
+    # Se houver pesquisa, aplicamos um filtro adicional sobre as FAQs já carregadas
     if termo_pesquisa:
-        # Filtra FAQs pela pesquisa
-        faqs = FAQ.objects.filter(
+        faqs_da_pagina = faqs_da_pagina.filter(
             Q(pergunta__icontains=termo_pesquisa) | 
             Q(resposta__icontains=termo_pesquisa)
-        ).select_related('categoria')
-    else:
-        # Busca todas as FAQs
-        faqs = FAQ.objects.all().select_related('categoria')
+        )
+
+    # 4. AGRUPAR AS FAQS ENCONTRADAS POR CATEGORIA
+    # E preparar os dados para o template, incluindo o total para o "Ver Mais".
+    dados_pagina_atual = {}
     
-    # Organiza FAQs por categoria
-    for faq in faqs:
-        faqs_por_categoria[faq.categoria.nome].append(faq)
+    # Primeiro, criamos um dicionário temporário para agrupar as FAQs
+    faqs_agrupadas = defaultdict(list)
+    for faq in faqs_da_pagina:
+        faqs_agrupadas[faq.categoria].append(faq)
     
-    # Se usuário estiver logado, busca suas FAQs salvas
+    # Agora, montamos o dicionário final na ordem correta da paginação
+    for categoria in categorias_na_pagina:
+        faqs_list = faqs_agrupadas.get(categoria, [])
+        dados_pagina_atual[categoria] = {
+            'faqs': faqs_list,
+            'total_count': len(faqs_list)
+        }
+
+    # 5. OBTER IDS DAS FAQS SALVAS PELO USUÁRIO LOGADO
     faqs_salvas_ids = []
     if request.user.is_authenticated:
-        faqs_salvas_ids = UserSavedFAQ.objects.filter(
+        faqs_salvas_ids = list(UserSavedFAQ.objects.filter(
             user=request.user
-        ).values_list('faq_id', flat=True)
-    
+        ).values_list('faq_id', flat=True))
+
+    # 6. PREPARAR O CONTEXTO FINAL
     context = {
-        'faqs_por_categoria': dict(faqs_por_categoria),
-        'categorias': categorias,
+        'faqs_por_categoria_paginada': dados_pagina_atual,
+        'page_obj': page_obj,  # Este objeto agora está correto
         'termo_pesquisa': termo_pesquisa,
-        'faqs_salvas_ids': list(faqs_salvas_ids),
+        'faqs_salvas_ids': faqs_salvas_ids,
     }
     
     return render(request, 'core/duvidas.html', context)
@@ -275,36 +298,55 @@ def remover_faq_salva(request, faq_id):
 # VIEWS DE CONTATOS
 # =============================================================================
 
-# Modificar a view contatos para incluir contatos salvos
+
+
 def contatos(request):
-    """Lista todos os contatos organizados por categoria"""
-    # Busca todas as categorias disponíveis
-    categorias = CategoriaContato.objects.all()
-    
-    # Cria um dicionário para armazenar contatos por categoria
-    contatos_por_categoria = {}
-    
-    # Para cada categoria, busca os contatos correspondentes
-    for categoria in categorias:
-        contatos_categoria = Contato.objects.filter(categoria=categoria)
-        if contatos_categoria.exists():
-            contatos_por_categoria[categoria.nome] = contatos_categoria
-    
-    # Verifica se não há contatos cadastrados
-    sem_contatos = not contatos_por_categoria
-    
-    # Se usuário estiver logado, busca seus contatos salvos
+    """
+    Lista Contatos com paginação de CATEGORIAS (3 por página),
+    exibindo um máximo de 6 contatos por categoria.
+    """
+    # 1. PEGAR APENAS CATEGORIAS QUE TÊM CONTATOS PARA PAGINAR
+    # Esta é a lógica correta: ela evita paginar categorias vazias.
+    categorias_para_paginar = CategoriaContato.objects.annotate(
+        num_contatos=Count('contatos')
+    ).filter(num_contatos__gt=0).order_by('nome')
+
+    # 2. APLICAR O PAGINATOR À LISTA CORRETA DE CATEGORIAS
+    paginator = Paginator(categorias_para_paginar, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 3. BUSCAR OS CONTATOS APENAS PARA AS CATEGORIAS DA PÁGINA ATUAL
+    categorias_na_pagina = page_obj.object_list
+    contatos_da_pagina = Contato.objects.filter(
+        categoria__in=categorias_na_pagina
+    ).select_related('categoria')
+
+    # 4. AGRUPAR OS CONTATOS TEMPORARIAMENTE
+    contatos_agrupados = defaultdict(list)
+    for contato in contatos_da_pagina:
+        contatos_agrupados[contato.categoria].append(contato)
+        
+    # 5. CONSTRUIR O DICIONÁRIO FINAL, MANTENDO A ORDEM E APLICANDO O LIMITE DE 6
+    dados_pagina_atual = {}
+    for categoria in categorias_na_pagina:
+        lista_limitada = contatos_agrupados.get(categoria, [])[:6]
+        dados_pagina_atual[categoria] = lista_limitada
+
+    # 6. BUSCAR CONTATOS SALVOS PELO USUÁRIO LOGADO
     contatos_salvos_ids = []
     if request.user.is_authenticated:
-        contatos_salvos_ids = UserSavedContato.objects.filter(
+        contatos_salvos_ids = list(UserSavedContato.objects.filter(
             user=request.user
-        ).values_list('contato_id', flat=True)
-    
+        ).values_list('contato_id', flat=True))
+
+    # 7. PREPARAR O CONTEXTO FINAL
     context = {
         'title': 'Contatos',
-        'contatos_por_categoria': contatos_por_categoria,
-        'sem_contatos': sem_contatos,
-        'contatos_salvos_ids': list(contatos_salvos_ids),
+        'contatos_por_categoria_paginada': dados_pagina_atual,
+        'page_obj': page_obj,
+        'contatos_salvos_ids': contatos_salvos_ids,
+        'sem_contatos': not categorias_para_paginar.exists()
     }
     
     return render(request, 'core/contatos.html', context)
