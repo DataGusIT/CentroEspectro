@@ -4,6 +4,8 @@ Django settings for centroespectro project.
 
 import os
 from pathlib import Path
+from django.contrib.messages import constants as messages
+
 
 # =============================================================================
 # CONFIGURAÇÕES BÁSICAS DO PROJETO
@@ -18,7 +20,7 @@ SECRET_KEY = 'django-insecure-sua-chave-secreta-aqui'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.86.107']
 
 # =============================================================================
 # CONFIGURAÇÕES DE APLICAÇÕES
@@ -137,3 +139,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'info',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}
