@@ -1157,6 +1157,35 @@ ESTRUTURA GERAL DO CSS
     }
 }
 
+@media (max-width: 768px) {
+    
+    /* Seleciona o container que envolve os botões de "Filtrar" e "Limpar" */
+    #filtro-section .col-12.text-end {
+        /* Converte o container em flexbox para controlar o alinhamento */
+        display: flex;
+        
+        /* Empilha os botões verticalmente */
+        flex-direction: column;
+        
+        /* Centraliza os botões na horizontal */
+        align-items: center;
+        
+        /* Cria o espaçamento vertical entre os botões */
+        gap: 12px;
+        
+        /* Adiciona um espaço acima do primeiro botão para separá-lo dos selects */
+        margin-top: 1rem;
+    }
+
+    /* Faz os botões ocuparem uma largura agradável e consistente */
+    #filtro-section #btnFiltrar,
+    #filtro-section #btnLimpar {
+        width: 100%;
+        max-width: 350px; /* Define uma largura máxima para não ficarem esticados demais */
+        margin: 0; /* Remove qualquer margem lateral que possa existir */
+    }
+}
+
 /* Desktop Grande */
 @media (min-width: 1200px) {
     .hover-card:hover {
