@@ -873,8 +873,7 @@ ESTRUTURA GERAL DO CSS
 .btn-close-toast:hover {
     background-color: #f1f3f5;
     color: #495057;
-    transform: rotate(90deg) scale(1.1);
-}
+    transform: rotate(9
 
 /* 
 ===============================================================================

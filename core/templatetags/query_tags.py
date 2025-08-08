@@ -1,5 +1,3 @@
-# em core/templatetags/query_tags.py
-
 from django import template
 from urllib.parse import urlencode
 
