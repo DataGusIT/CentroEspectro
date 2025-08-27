@@ -218,22 +218,9 @@ a:hover {
 
 .hero-image {
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-    0% {
-        transform: translateY(0px);
-    }
-
-    50% {
-        transform: translateY(-20px);
-    }
-
-    100% {
-        transform: translateY(0px);
-    }
+    max-width: 100%;
+    /* Ajusta o tamanho da imagem */
+    height: auto;
 }
 
 .highlight-text {
@@ -383,7 +370,12 @@ a:hover {
 
 .about-image {
     border-radius: 16px;
-    box-shadow: var(--card-shadow);
+    max-width: 65%;
+    /* Deixa a imagem menor que a coluna */
+    display: block;
+    /* Necessário para centralizar com margem automática */
+    margin: 0 auto;
+    /* Centraliza a imagem no seu container */
 }
 
 .about-image-dots {
