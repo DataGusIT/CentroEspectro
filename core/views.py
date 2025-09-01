@@ -51,11 +51,9 @@ def area_professor(request):
     page_number = request.GET.get('page')
     alunos_page_obj = paginator.get_page(page_number)
     
-    # Adicionando último relatório (sua lógica original, mas aplicada à página atual)
     for aluno in alunos_page_obj:
         aluno.ultimo_relatorio = RelatorioDesempenho.objects.filter(aluno=aluno).first()
 
-    # Buscando dados para os filtros
     turmas = Turma.objects.all().order_by('nome')
     niveis_autismo = Aluno.NIVEL_AUTISMO_CHOICES
 
@@ -75,15 +73,12 @@ def filtrar_alunos_api(request):
     Endpoint de API que retorna a lista de alunos filtrada em HTML.
     Esta view é chamada via AJAX pelo JavaScript da página.
     """
-    # 1. Obter parâmetros da requisição GET
     search_term = request.GET.get('search', '')
     turma_id = request.GET.get('turma', '')
     nivel = request.GET.get('nivel', '')
     
-    # 2. Construir a query base
     alunos_list = Aluno.objects.select_related('turma').all().order_by('nome_completo')
     
-    # 3. Aplicar filtros se eles existirem
     if search_term:
         alunos_list = alunos_list.filter(nome_completo__icontains=search_term)
     
@@ -93,12 +88,10 @@ def filtrar_alunos_api(request):
     if nivel and nivel != 'todos':
         alunos_list = alunos_list.filter(nivel_autismo=nivel)
         
-    # 4. Paginar os resultados filtrados
     paginator = Paginator(alunos_list, 10)
-    page_number = request.GET.get('page', 1) # Sempre vai para a página 1 em uma nova filtragem
+    page_number = request.GET.get('page', 1)
     alunos_page_obj = paginator.get_page(page_number)
 
-    # Adicionando último relatório (lógica original)
     for aluno in alunos_page_obj:
         aluno.ultimo_relatorio = RelatorioDesempenho.objects.filter(aluno=aluno).first()
 
@@ -106,14 +99,12 @@ def filtrar_alunos_api(request):
         'alunos_page': alunos_page_obj
     }
     
-    # 5. Renderizar APENAS a lista de alunos e a paginação
     return render(request, 'core/auth/_lista_alunos_parcial.html', context)
 
 @login_required
 @user_passes_test(is_professor, login_url='/login/', redirect_field_name=None)
 def detalhes_aluno(request, aluno_id):
     """Exibe todos os relatórios de um aluno específico."""
-    # MODIFICADO: Usamos select_related aqui também
     aluno = get_object_or_404(Aluno.objects.select_related('turma'), id=aluno_id)
     relatorios = RelatorioDesempenho.objects.filter(aluno=aluno).select_related('professor')
     
@@ -136,7 +127,7 @@ def adicionar_relatorio(request, aluno_id):
         if form.is_valid():
             relatorio = form.save(commit=False)
             relatorio.aluno = aluno
-            relatorio.professor = request.user.customuser # Associa o CustomUser do professor logado
+            relatorio.professor = request.user.customuser
             relatorio.save()
             messages.success(request, f'Relatório para {aluno.nome_completo} salvo com sucesso!')
             return redirect('detalhes_aluno', aluno_id=aluno.id)
@@ -150,42 +141,90 @@ def adicionar_relatorio(request, aluno_id):
     }
     return render(request, 'core/auth/adicionar_relatorio.html', context)
 
+# NOVA VIEW
+@login_required
+@user_passes_test(is_professor, login_url='/login/', redirect_field_name=None)
+def editar_relatorio(request, relatorio_id):
+    """Formulário para editar um relatório existente."""
+    relatorio = get_object_or_404(RelatorioDesempenho, id=relatorio_id)
+    aluno = relatorio.aluno
+
+    # Verificação de segurança: o professor logado é o autor do relatório?
+    if relatorio.professor != request.user.customuser:
+        messages.error(request, 'Você não tem permissão para editar este relatório.')
+        return redirect('detalhes_aluno', aluno_id=aluno.id)
+
+    if request.method == 'POST':
+        form = RelatorioDesempenhoForm(request.POST, instance=relatorio)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Relatório atualizado com sucesso!')
+            return redirect('detalhes_aluno', aluno_id=aluno.id)
+    else:
+        form = RelatorioDesempenhoForm(instance=relatorio)
+
+    context = {
+        'title': f'Editar Relatório para {aluno.nome_completo}',
+        'form': form,
+        'aluno': aluno,
+        'relatorio': relatorio
+    }
+    return render(request, 'core/auth/editar_relatorio.html', context)
+
+# NOVA VIEW
+@login_required
+@user_passes_test(is_professor, login_url='/login/', redirect_field_name=None)
+def apagar_relatorio(request, relatorio_id):
+    """Página de confirmação e lógica para apagar um relatório."""
+    relatorio = get_object_or_404(RelatorioDesempenho, id=relatorio_id)
+    aluno = relatorio.aluno
+
+    # Verificação de segurança
+    if relatorio.professor != request.user.customuser:
+        messages.error(request, 'Você não tem permissão para apagar este relatório.')
+        return redirect('detalhes_aluno', aluno_id=aluno.id)
+
+    if request.method == 'POST':
+        relatorio.delete()
+        messages.success(request, 'Relatório apagado com sucesso.')
+        return redirect('detalhes_aluno', aluno_id=aluno.id)
+
+    context = {
+        'title': 'Confirmar Exclusão',
+        'relatorio': relatorio,
+        'aluno': aluno
+    }
+    return render(request, 'core/auth/apagar_relatorio_confirm.html', context)
+
+
 @login_required
 @user_passes_test(is_professor, login_url='/login/', redirect_field_name=None)
 def ferramentas_professor(request):
     """
     Lista TODAS as ferramentas para a área do professor com paginação aninhada.
-    - Paginação principal para CATEGORIAS (3 por página).
-    - Paginação secundária para FERRAMENTAS dentro de cada categoria (3 por página).
     """
-    # 1. PAGINAÇÃO PRINCIPAL (CATEGORIAS)
     categorias_com_ferramentas = CategoriaFerramenta.objects.annotate(
         num_ferramentas=Count('ferramentas')
     ).filter(num_ferramentas__gt=0).order_by('nome')
     
-    main_paginator = Paginator(categorias_com_ferramentas, 3)  # 3 categorias por página
+    main_paginator = Paginator(categorias_com_ferramentas, 3)
     main_page_number = request.GET.get('page')
     main_page_obj = main_paginator.get_page(main_page_number)
     categorias_na_pagina = main_page_obj.object_list
 
-    # 2. BUSCAR TODAS AS FERRAMENTAS PARA AS CATEGORIAS DA PÁGINA ATUAL
-    # CORREÇÃO: Usando 'categoria__in' ao invés de 'tipo__in'
     todas_ferramentas_da_pagina = Ferramenta.objects.filter(
         categoria__in=categorias_na_pagina
     ).order_by('nome')
     
     ferramentas_agrupadas = defaultdict(list)
     for ferramenta in todas_ferramentas_da_pagina:
-        # CORREÇÃO: Agrupando por 'ferramenta.categoria' ao invés de 'ferramenta.tipo'
         ferramentas_agrupadas[ferramenta.categoria].append(ferramenta)
 
-    # 3. CRIAR PAGINADORES ANINHADOS PARA CADA CATEGORIA
     dados_pagina_atual = OrderedDict()
     for categoria in categorias_na_pagina:
         lista_de_ferramentas = ferramentas_agrupadas.get(categoria, [])
-        ferramenta_paginator = Paginator(lista_de_ferramentas, 3)  # 3 ferramentas por página
+        ferramenta_paginator = Paginator(lista_de_ferramentas, 3)
         
-        # Cria um nome de parâmetro de URL único para este paginador
         query_param_name = f"cat_fer_{categoria.id}_page"
         ferramenta_page_number = request.GET.get(query_param_name)
         ferramenta_page_obj = ferramenta_paginator.get_page(ferramenta_page_number)
@@ -195,16 +234,14 @@ def ferramentas_professor(request):
             'query_param_name': query_param_name
         }
 
-    # 4. PREPARAR O CONTEXTO FINAL
     context = {
         'title': 'Ferramentas do Professor',
         'ferramentas_por_categoria_paginada': dados_pagina_atual,
-        'page_obj': main_page_obj,  # Paginador principal
+        'page_obj': main_page_obj,
         'sem_ferramentas': not categorias_com_ferramentas.exists()
     }
     
     return render(request, 'core/auth/ferramentas_professor.html', context)
-
 # =============================================================================
 # VIEWS PÚBLICAS - PÁGINAS PRINCIPAIS
 # =============================================================================
