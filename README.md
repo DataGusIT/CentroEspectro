@@ -21,7 +21,9 @@ Construída com Python e Django, a solução oferece um portal informativo para 
 | :---: | :---: | :---: |
 | <img width="1902" height="1079" alt="Image" src="https://github.com/user-attachments/assets/27904553-eaa4-4f22-9ab6-8c5db5a596c8" /> | <img width="1899" height="1079" alt="Image" src="https://github.com/user-attachments/assets/ad408d98-d9df-4936-9fd9-4522cc8c1132" /> | <img width="1903" height="1079" alt="Image" src="https://github.com/user-attachments/assets/d8a43fe6-ec5f-4cbd-8d58-61ea51bc5ee6" /> |
 | **Detalhes de Contato** | **Perfil do Usuário** | **Área do Professor** |
-| <img width="1899" height="1079" alt="Image" src="https://github.com/user-attachments/assets/4acd96b1-923d-4a62-bc2e-74427938fab9" /> | ![Perfil do Usuário](link-para-sua-imagem-aqui) | ![Área do Professor](link-para-sua-imagem-aqui) |
+| <img width="1899" height="1079" alt="Image" src="https://github.com/user-attachments/assets/4acd96b1-923d-4a62-bc2e-74427938fab9" /> | 
+<img width="1904" height="1079" alt="Image" src="https://github.com/user-attachments/assets/68dbd11c-5223-41a1-bf57-a0ec6d1e83fc" />
+ | <img width="1899" height="1077" alt="Image" src="https://github.com/user-attachments/assets/c5840390-8512-4237-b6fb-54f4f570200d" /> |
 
 ## ✨ Funcionalidades
 
