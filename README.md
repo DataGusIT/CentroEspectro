@@ -19,7 +19,7 @@ Construída com Python e Django, a solução oferece um portal informativo para 
 
 | Tela Inicial | Dúvidas Frequentes | Rede de Contatos |
 | :---: | :---: | :---: |
-| <img width="1902" height="1079" alt="Image" src="https://github.com/user-attachments/assets/27904553-eaa4-4f22-9ab6-8c5db5a596c8" /> | ![Tela de Dúvidas](link-para-sua-imagem-aqui) | ![Tela de Contatos](link-para-sua-imagem-aqui) |
+| <img width="1902" height="1079" alt="Image" src="https://github.com/user-attachments/assets/27904553-eaa4-4f22-9ab6-8c5db5a596c8" /> | <img width="1899" height="1079" alt="Image" src="https://github.com/user-attachments/assets/ad408d98-d9df-4936-9fd9-4522cc8c1132" /> | ![Tela de Contatos](link-para-sua-imagem-aqui) |
 | **Detalhes de Contato** | **Perfil do Usuário** | **Área do Professor** |
 | ![Detalhes de Contato](link-para-sua-imagem-aqui) | ![Perfil do Usuário](link-para-sua-imagem-aqui) | ![Área do Professor](link-para-sua-imagem-aqui) |
 
