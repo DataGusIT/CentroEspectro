@@ -949,10 +949,7 @@ a:hover {
 /* Configuração da Seção Pai */
 .about-section {
     position: relative;
-    /* Referência para o fundo absoluto */
     overflow: hidden;
-    /* Garante que nada vaze para fora */
-    /* padding: 5rem 0;  <-- Já existe no seu CSS, mantenha */
 }
 
 /* O fundo de bolinhas ocupando TUDO */
@@ -963,26 +960,21 @@ a:hover {
     width: 100%;
     height: 100%;
 
-    /* Configuração do padrão */
-    /* Bolinhas usando a cor primária */
-    background-image: radial-gradient(var(--primary) 12%, transparent 12%);
+    /* MUDANÇA 1: Use a cor hexadecimal direta ao invés de var(--primary) 
+       para garantir que funcione mesmo se a variável demorar a carregar */
+    background-image: radial-gradient(#6a3ea1 15%, transparent 15%);
 
-    /* Aumentei para 30px para ficar mais "respirado" já que ocupa a tela toda */
     background-size: 30px 30px;
+    opacity: 0.08;
 
-    /* Opacidade bem baixa para não poluir a leitura nem a imagem */
-    opacity: 0.06;
-
-    z-index: 0;
-    /* Fica no fundo base */
+    z-index: 1;
     pointer-events: none;
 }
 
-
-/* Garante que o conteúdo (texto e imagem) fique SOBRE as bolinhas */
+/* Garante que o texto e a imagem fiquem ACIMA das bolinhas */
 .about-section .container {
     position: relative;
-    z-index: 2;
+    z-index: 3;
 }
 
 /* Removemos estilos antigos que não precisamos mais */
