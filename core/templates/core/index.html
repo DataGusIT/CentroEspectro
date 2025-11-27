@@ -8,7 +8,7 @@
     <div class="container position-relative">
         <div class="row min-vh-75 align-items-center py-5">
             <div class="col-lg-6">
-                <span class="badge bg-white text-primary fs-6 mb-3 px-3 py-2">Projeto TCC</span>
+                <span class="badge bg-white text-primary fs-6 mb-3 px-3 py-2">Ferramenta web</span>
                 <h1 class="display-4 fw-bold text-white mb-4">Apoio e informação para <span
                         class="highlight-text">Transtorno do Espectro Autista</span></h1>
                 <p class="lead text-white mb-4">
@@ -152,27 +152,32 @@
 
 <!-- About Section -->
 <section class="about-section py-5 mt-4 fade-in-section">
-    <div class="container">
+    
+    <div class="about-decoration-dots"></div>
+
+    <div class="container position-relative"> 
         <div class="row align-items-center">
-            <div class="col-lg-6 mb-4 mb-lg-0 order-lg-2">
-                <div class="section-header text-center mb-4">
+            
+            <div class="col-lg-6 mb-4 mb-lg-0 order-lg-2 about-text-column">
+                <div class="section-header text-start mb-4">
                     <span class="section-subtitle">Sobre este projeto</span>
                     <h2 class="section-title">Feito pensando em vocês</h2>
-                    <div class="section-divider"></div>
+                    <div class="section-divider" style="margin-left: 0;"></div>
                 </div>
-                <p>Este projeto de TCC foi desenvolvido para apoiar os funcionários sobre o autismo e no acolhimento dos alunos.</p>
+                
+                <p>Este projeto foi desenvolvido para apoiar os funcionários sobre o autismo e no acolhimento dos alunos.</p>
                 <p>A proposta nasceu da necessidade de reunir, em um único espaço, informações simples, práticas e acessíveis sobre os alunos autistas, sem complicações.</p>
-                <div class="mt-4 text-center">
+                
+                <div class="mt-4 text-start">
                     <a href="#" class="btn btn-primary">
                         Conhecer mais sobre o projeto
                     </a>
                 </div>
             </div>
+
             <div class="col-lg-6 text-center order-lg-1">
                 <div class="about-image-container">
-                    <img src="{% static 'img/testeProf (11).png' %}" alt="Equipe da escola trabalhando juntos"
-                        class="about-image img-fluid">
-                    <div class="about-image-dots"></div>
+                    <img src="{% static 'img/testeProf (11).png' %}" alt="Equipe" class="about-image img-fluid">
                 </div>
             </div>
         </div>

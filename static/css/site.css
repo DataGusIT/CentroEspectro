@@ -945,3 +945,46 @@ a:hover {
         padding: 1.2rem;
     }
 }
+
+/* Configuração da Seção Pai */
+.about-section {
+    position: relative;
+    /* Referência para o fundo absoluto */
+    overflow: hidden;
+    /* Garante que nada vaze para fora */
+    /* padding: 5rem 0;  <-- Já existe no seu CSS, mantenha */
+}
+
+/* O fundo de bolinhas ocupando TUDO */
+.about-decoration-dots {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* Configuração do padrão */
+    /* Bolinhas usando a cor primária */
+    background-image: radial-gradient(var(--primary) 12%, transparent 12%);
+
+    /* Aumentei para 30px para ficar mais "respirado" já que ocupa a tela toda */
+    background-size: 30px 30px;
+
+    /* Opacidade bem baixa para não poluir a leitura nem a imagem */
+    opacity: 0.06;
+
+    z-index: 0;
+    /* Fica no fundo base */
+    pointer-events: none;
+}
+
+/* Garante que o conteúdo (texto e imagem) fique SOBRE as bolinhas */
+.about-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Removemos estilos antigos que não precisamos mais */
+.about-image-dots {
+    display: none;
+}

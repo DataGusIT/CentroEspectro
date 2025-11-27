@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',  # Adicionado para WhiteNoise
     'django.contrib.staticfiles',
+    'django_extensions',
     'core',
     # Apps do Allauth
     'allauth',
