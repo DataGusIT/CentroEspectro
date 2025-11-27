@@ -978,6 +978,7 @@ a:hover {
     pointer-events: none;
 }
 
+
 /* Garante que o conteúdo (texto e imagem) fique SOBRE as bolinhas */
 .about-section .container {
     position: relative;
