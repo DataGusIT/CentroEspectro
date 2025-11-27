@@ -614,43 +614,68 @@ def remover_faq_salva(request, faq_id):
 
 def contatos(request):
     """
-    Lista Contatos com paginação aninhada e navegação flexível por âncoras.
+    Lista Contatos com filtros (Categoria, Atendimento, Localização),
+    paginação aninhada e navegação flexível.
     """
-    # 1. BUSCAR TODAS AS CATEGORIAS E CALCULAR SUAS PÁGINAS
-    todas_categorias = CategoriaContato.objects.annotate(
-        num_contatos=Count('contatos')
-    ).filter(num_contatos__gt=0).order_by('nome')
-    
-    main_paginator = Paginator(todas_categorias, 3) # 3 categorias por página
+    # 1. CAPTURAR PARÂMETROS DE FILTRO DA URL
+    filtro_categoria = request.GET.get('categoria')
+    filtro_atendimento = request.GET.get('atendimento')
+    filtro_localizacao = request.GET.get('localizacao', '').strip()
 
-    # ================================================================= #
-    # ALTERAÇÃO PRINCIPAL: Criamos a lista de categorias com suas páginas #
-    # ================================================================= #
+    # 2. QUERYSET BASE DE CONTATOS (APENAS APROVADOS)
+    contatos_filtrados = Contato.objects.filter(aprovado=True)
+
+    # 3. APLICAR FILTROS AOS CONTATOS
+    if filtro_categoria and filtro_categoria != 'todos':
+        contatos_filtrados = contatos_filtrados.filter(categoria_id=filtro_categoria)
+
+    if filtro_atendimento == 'presencial':
+        contatos_filtrados = contatos_filtrados.filter(atendimento_presencial=True)
+    elif filtro_atendimento == 'online':
+        contatos_filtrados = contatos_filtrados.filter(atendimento_online=True)
+
+    if filtro_localizacao:
+        # Filtra por Cidade OU Estado (case insensitive)
+        contatos_filtrados = contatos_filtrados.filter(
+            Q(cidade__icontains=filtro_localizacao) | 
+            Q(estado__icontains=filtro_localizacao)
+        )
+
+    # 4. IDENTIFICAR CATEGORIAS RELEVANTES
+    # Buscamos apenas as categorias que possuem contatos após a filtragem
+    categorias_ids_com_resultados = contatos_filtrados.values_list('categoria_id', flat=True).distinct()
+    
+    categorias_para_exibir = CategoriaContato.objects.filter(
+        id__in=categorias_ids_com_resultados
+    ).order_by('nome')
+
+    # 5. PAGINAÇÃO PRINCIPAL (CATEGORIAS)
+    main_paginator = Paginator(categorias_para_exibir, 3) # 3 categorias por página
+
+    # Criar lista de categorias com suas páginas para o menu superior
     categorias_com_pagina = []
     items_per_page = main_paginator.per_page
-    for index, categoria in enumerate(todas_categorias):
+    for index, categoria in enumerate(categorias_para_exibir):
         page_number = (index // items_per_page) + 1
         categorias_com_pagina.append({
             'categoria': categoria,
             'pagina': page_number
         })
 
-    # 2. PAGINAÇÃO PRINCIPAL (lógica existente)
     main_page_number = request.GET.get('page')
     main_page_obj = main_paginator.get_page(main_page_number)
     categorias_na_pagina = main_page_obj.object_list
 
-    # 3. BUSCAR CONTATOS DA PÁGINA ATUAL (lógica existente)
-    todos_contatos_da_pagina = Contato.objects.filter(
-        categoria__in=categorias_na_pagina,
-        aprovado=True  # <-- ADICIONE ESTE FILTRO IMPORTANTE
+    # 6. AGRUPAR CONTATOS FILTRADOS POR CATEGORIA
+    contatos_da_pagina = contatos_filtrados.filter(
+        categoria__in=categorias_na_pagina
     ).order_by('nome')
     
     contatos_agrupados = defaultdict(list)
-    for contato in todos_contatos_da_pagina:
+    for contato in contatos_da_pagina:
         contatos_agrupados[contato.categoria].append(contato)
 
-    # 4. CRIAR PAGINADORES ANINHADOS (lógica existente)
+    # 7. CRIAR PAGINADORES ANINHADOS
     dados_pagina_atual = OrderedDict()
     for categoria in categorias_na_pagina:
         lista_de_contatos = contatos_agrupados.get(categoria, [])
@@ -664,22 +689,28 @@ def contatos(request):
             'query_param_name': query_param_name
         }
 
-    # 5. BUSCAR CONTATOS SALVOS (lógica existente)
+    # 8. BUSCAR CONTATOS SALVOS
     contatos_salvos_ids = []
     if request.user.is_authenticated:
         contatos_salvos_ids = list(UserSavedContato.objects.filter(
             user=request.user
         ).values_list('contato_id', flat=True))
 
-    # 6. PREPARAR O CONTEXTO FINAL (ATUALIZADO)
+    # Lista completa para o <select> do filtro (sem filtrar as opções disponíveis)
+    todas_categorias_select = CategoriaContato.objects.all().order_by('nome')
+
     context = {
         'title': 'Contatos',
         'contatos_por_categoria_paginada': dados_pagina_atual,
         'page_obj': main_page_obj,
         'contatos_salvos_ids': contatos_salvos_ids,
-        'sem_contatos': not todas_categorias.exists(),
-        'categorias_com_pagina': categorias_com_pagina, # <-- VARIÁVEL NOVA E ESSENCIAL
-        'todas_categorias': todas_categorias # Adicionado para os filtros de select
+        'sem_contatos': not categorias_para_exibir.exists(),
+        'categorias_com_pagina': categorias_com_pagina,
+        'todas_categorias': todas_categorias_select,
+        # Passar os valores atuais dos filtros para o template manter o estado
+        'filtro_atual_categoria': int(filtro_categoria) if filtro_categoria and filtro_categoria != 'todos' else 'todos',
+        'filtro_atual_atendimento': filtro_atendimento or 'todos',
+        'filtro_atual_localizacao': filtro_localizacao,
     }
     
     return render(request, 'core/contatos.html', context)

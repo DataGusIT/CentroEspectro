@@ -34,9 +34,8 @@
 </section>
 
 <!-- ================================== -->
-<!-- SEÇÃO FILTROS - REESTILIZADA     -->
+<!-- SEÇÃO FILTROS - FUNCIONAL        -->
 <!-- ================================== -->
-<!-- ADICIONADO: classe .fade-in-section -->
 <section id="filtro-section" class="py-5 bg-light fade-in-section">
     <div class="container">
         <div class="row justify-content-center">
@@ -49,29 +48,38 @@
                         </button>
                     </div>
                     <div class="filter-card-body">
-                        <div class="row g-3 align-items-center">
-                            <div class="col-md-4">
-                                <label for="filtro-categoria" class="form-label">Tipo de contato</label>
-                                <select id="filtro-categoria" class="form-select">
-                                    <option value="todos" selected>Todas as categorias</option>
-                                    {% for categoria in todas_categorias %}
-                                    <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
-                                    {% endfor %}
-                                </select>
+                        <!-- Formulário GET padrão do HTML para facilitar, controlado via JS -->
+                        <form id="contact-filter-form" method="GET" action="{% url 'contatos' %}">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-4">
+                                    <label for="filtro-categoria" class="form-label">Tipo de contato</label>
+                                    <select id="filtro-categoria" name="categoria" class="form-select">
+                                        <option value="todos" {% if filtro_atual_categoria == 'todos' %}selected{% endif %}>Todas as categorias</option>
+                                        {% for categoria in todas_categorias %}
+                                        <option value="{{ categoria.id }}" {% if filtro_atual_categoria == categoria.id %}selected{% endif %}>
+                                            {{ categoria.nome }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="filtro-atendimento" class="form-label">Atendimento</label>
+                                    <select id="filtro-atendimento" name="atendimento" class="form-select">
+                                        <option value="todos" {% if filtro_atual_atendimento == 'todos' %}selected{% endif %}>Todos</option>
+                                        <option value="presencial" {% if filtro_atual_atendimento == 'presencial' %}selected{% endif %}>Presencial</option>
+                                        <option value="online" {% if filtro_atual_atendimento == 'online' %}selected{% endif %}>Online</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="filtro-localizacao" class="form-label">Localização (Estado/Cidade)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                        <input type="text" id="filtro-localizacao" name="localizacao" class="form-control border-start-0 ps-0" 
+                                               placeholder="Ex: SP, São Paulo" value="{{ filtro_atual_localizacao }}">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label for="filtro-atendimento" class="form-label">Atendimento</label>
-                                <select id="filtro-atendimento" class="form-select">
-                                    <option value="todos" selected>Todos</option>
-                                    <option value="presencial">Presencial</option>
-                                    <option value="online">Online</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="filtro-localizacao" class="form-label">Localização (Estado)</label>
-                                <input type="text" id="filtro-localizacao" class="form-control" placeholder="Digite a sigla do estado (Ex: SP)">
-                            </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -644,6 +652,77 @@
                 }
             });
         });
+    }
+
+    /**
+     * Lógica para os filtros de contato.
+     * Atualiza a URL automaticamente ao mudar os selects e com delay na digitação.
+     */
+    function initContactFilters() {
+        const categoriaSelect = document.getElementById('filtro-categoria');
+        const atendimentoSelect = document.getElementById('filtro-atendimento');
+        const localizacaoInput = document.getElementById('filtro-localizacao');
+        const limparBtn = document.getElementById('btn-limpar-filtros');
+        let searchTimeout;
+
+        function applyFilters() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Atualiza ou remove parâmetros
+            if (categoriaSelect.value !== 'todos') {
+                params.set('categoria', categoriaSelect.value);
+            } else {
+                params.delete('categoria');
+            }
+            
+            if (atendimentoSelect.value !== 'todos') {
+                params.set('atendimento', atendimentoSelect.value);
+            } else {
+                params.delete('atendimento');
+            }
+            
+            if (localizacaoInput.value.trim()) {
+                params.set('localizacao', localizacaoInput.value.trim());
+            } else {
+                params.delete('localizacao');
+            }
+            
+            // Reseta para a página 1 ao filtrar para evitar erros de paginação vazia
+            params.delete('page');
+            
+            // Navega para a nova URL
+            window.location.href = `${window.location.pathname}?${params.toString()}#filtro-section`;
+        }
+        
+        // Event Listeners
+        if(categoriaSelect) categoriaSelect.addEventListener('change', applyFilters);
+        if(atendimentoSelect) atendimentoSelect.addEventListener('change', applyFilters);
+
+        if(localizacaoInput) {
+            localizacaoInput.addEventListener('keyup', (e) => {
+                // Se pressionar Enter, aplica imediatamente
+                if (e.key === 'Enter') {
+                    clearTimeout(searchTimeout);
+                    applyFilters();
+                    return;
+                }
+                // Delay para digitação (debounce)
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 800);
+            });
+        }
+
+        if(limparBtn) {
+            limparBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Limpa visualmente
+                if(categoriaSelect) categoriaSelect.value = 'todos';
+                if(atendimentoSelect) atendimentoSelect.value = 'todos';
+                if(localizacaoInput) localizacaoInput.value = '';
+                // Recarrega sem parâmetros
+                window.location.href = window.location.pathname;
+            });
+        }
     }
 
     /**
