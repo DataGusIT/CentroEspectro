@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',  # Adicionado para WhiteNoise
     'django.contrib.staticfiles',
-    'django_extensions',
     'core',
     # Apps do Allauth
     'allauth',
@@ -55,6 +54,9 @@ INSTALLED_APPS = [
     # Provedor do Google
     'allauth.socialaccount.providers.google',
 ]
+
+if DEBUG:
+    INSTALLED_APPS += ['django_extensions']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
