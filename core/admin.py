@@ -10,8 +10,6 @@ from django import forms
 # =============================================================================
 # FUNÇÃO AUXILIAR DE UPLOAD (REUTILIZÁVEL)
 # =============================================================================
-# É uma boa prática mover a lógica de upload para uma função que pode ser chamada
-# por qualquer painel de administração.
 def _upload_to_supabase(file_obj, bucket_name, sub_folder=''):
     """
     Faz o upload de um arquivo para um bucket específico no Supabase.
@@ -76,10 +74,11 @@ class CustomUserAdmin(UserAdmin):
         ("Funções Customizadas", {"fields": ("is_admin", "is_professor")}),
         ("Datas Importantes", {"fields": ("last_login", "date_joined")}),
     )
+
 # =============================================================================
 # NOVA ADMINISTRAÇÃO: ALUNOS E RELATÓRIOS
 # =============================================================================
-# NOVA ADMINISTRAÇÃO PARA TURMAS
+
 @admin.register(Turma)
 class TurmaAdmin(admin.ModelAdmin):
     list_display = ('nome',)
@@ -163,34 +162,35 @@ class FAQAdmin(admin.ModelAdmin):
     list_filter = ('categoria',)
     search_fields = ('pergunta', 'resposta', 'fonte')
 
-@admin.register(UserSavedFAQ)
-class UserSavedFAQAdmin(admin.ModelAdmin):
-    list_display = ('user', 'get_faq_pergunta', 'get_categoria', 'data_salva')
-    list_filter = ('data_salva', 'faq__categoria')
-    search_fields = ('user__username', 'user__email', 'faq__pergunta')
-    readonly_fields = ('data_salva',)
-    date_hierarchy = 'data_salva'
-    
-    fieldsets = (
-        (None, {
-            'fields': ('user', 'faq')
-        }),
-        ('Informações de Data', {
-            'fields': ('data_salva',),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    @admin.display(description='Pergunta da FAQ', ordering='faq__pergunta')
-    def get_faq_pergunta(self, obj):
-        return obj.faq.pergunta[:50] + "..." if len(obj.faq.pergunta) > 50 else obj.faq.pergunta
-    
-    @admin.display(description='Categoria', ordering='faq__categoria__nome')
-    def get_categoria(self, obj):
-        return obj.faq.categoria.nome
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user', 'faq', 'faq__categoria')
+# --- COMENTADO: DÚVIDAS SALVAS ---
+# @admin.register(UserSavedFAQ)
+# class UserSavedFAQAdmin(admin.ModelAdmin):
+#     list_display = ('user', 'get_faq_pergunta', 'get_categoria', 'data_salva')
+#     list_filter = ('data_salva', 'faq__categoria')
+#     search_fields = ('user__username', 'user__email', 'faq__pergunta')
+#     readonly_fields = ('data_salva',)
+#     date_hierarchy = 'data_salva'
+#     
+#     fieldsets = (
+#         (None, {
+#             'fields': ('user', 'faq')
+#         }),
+#         ('Informações de Data', {
+#             'fields': ('data_salva',),
+#             'classes': ('collapse',)
+#         }),
+#     )
+#     
+#     @admin.display(description='Pergunta da FAQ', ordering='faq__pergunta')
+#     def get_faq_pergunta(self, obj):
+#         return obj.faq.pergunta[:50] + "..." if len(obj.faq.pergunta) > 50 else obj.faq.pergunta
+#     
+#     @admin.display(description='Categoria', ordering='faq__categoria__nome')
+#     def get_categoria(self, obj):
+#         return obj.faq.categoria.nome
+#     
+#     def get_queryset(self, request):
+#         return super().get_queryset(request).select_related('user', 'faq', 'faq__categoria')
 
 # =============================================================================
 # ADMINISTRAÇÃO DE CONTATOS (VERSÃO FINAL CORRIGIDA)
@@ -324,40 +324,42 @@ class ContatoAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" width="150" />', obj.imagem_url)
         return "Nenhuma imagem."
 
-@admin.register(UserSavedContato)
-class UserSavedContatoAdmin(admin.ModelAdmin):
-    # Código existente está correto e não precisa de alterações
-    list_display = ('user', 'get_contato_nome', 'get_categoria', 'data_salva')
-    list_filter = ('data_salva', 'contato__categoria')
-    search_fields = ('user__username', 'user__email', 'contato__nome')
-    readonly_fields = ('data_salva',)
-    date_hierarchy = 'data_salva'
-    
-    fieldsets = (
-        (None, { 'fields': ('user', 'contato') }),
-        ('Informações de Data', { 'fields': ('data_salva',), 'classes': ('collapse',) }),
-    )
-    
-    @admin.display(description='Nome do Contato', ordering='contato__nome')
-    def get_contato_nome(self, obj):
-        return obj.contato.nome
-    
-    @admin.display(description='Categoria', ordering='contato__categoria__nome')
-    def get_categoria(self, obj):
-        return obj.contato.categoria.nome if obj.contato.categoria else 'Sem categoria'
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user', 'contato', 'contato__categoria')
+# --- COMENTADO: CONTATOS SALVOS ---
+# @admin.register(UserSavedContato)
+# class UserSavedContatoAdmin(admin.ModelAdmin):
+#     # Código existente está correto e não precisa de alterações
+#     list_display = ('user', 'get_contato_nome', 'get_categoria', 'data_salva')
+#     list_filter = ('data_salva', 'contato__categoria')
+#     search_fields = ('user__username', 'user__email', 'contato__nome')
+#     readonly_fields = ('data_salva',)
+#     date_hierarchy = 'data_salva'
+#     
+#     fieldsets = (
+#         (None, { 'fields': ('user', 'contato') }),
+#         ('Informações de Data', { 'fields': ('data_salva',), 'classes': ('collapse',) }),
+#     )
+#     
+#     @admin.display(description='Nome do Contato', ordering='contato__nome')
+#     def get_contato_nome(self, obj):
+#         return obj.contato.nome
+#     
+#     @admin.display(description='Categoria', ordering='contato__categoria__nome')
+#     def get_categoria(self, obj):
+#         return obj.contato.categoria.nome if obj.contato.categoria else 'Sem categoria'
+#     
+#     def get_queryset(self, request):
+#         return super().get_queryset(request).select_related('user', 'contato', 'contato__categoria')
 
 
 # =============================================================================
 # ADMINISTRAÇÃO DE FERRAMENTAS
 # =============================================================================
 
-@admin.register(CategoriaFerramenta)
-class CategoriaFerramentaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'icone')
-    search_fields = ('nome',)
+# --- COMENTADO: CATEGORIA FERRAMENTAS ---
+# @admin.register(CategoriaFerramenta)
+# class CategoriaFerramentaAdmin(admin.ModelAdmin):
+#     list_display = ('nome', 'icone')
+#     search_fields = ('nome',)
 
 # --- NOVO FORMULÁRIO PARA O MODELO FERRAMENTA ---
 class FerramentaAdminForm(forms.ModelForm):
@@ -368,64 +370,65 @@ class FerramentaAdminForm(forms.ModelForm):
         model = Ferramenta
         fields = '__all__'
 
-@admin.register(Ferramenta)
-class FerramentaAdmin(admin.ModelAdmin):
-    form = FerramentaAdminForm # Usa o formulário personalizado
-    list_display = ('nome', 'categoria', 'autor', 'publico_alvo', 'apenas_para_professores', 'eh_gratuita')
-    list_filter = ('categoria', 'apenas_para_professores', 'eh_gratuita', 'publico_alvo')
-    search_fields = ('nome', 'descricao', 'autor')
-    autocomplete_fields = ['categoria']
-    readonly_fields = ('imagem_capa_url', 'arquivo_pdf_url') # Deixa os campos de URL apenas para leitura
+# --- COMENTADO: FERRAMENTAS ---
+# @admin.register(Ferramenta)
+# class FerramentaAdmin(admin.ModelAdmin):
+#     form = FerramentaAdminForm # Usa o formulário personalizado
+#     list_display = ('nome', 'categoria', 'autor', 'publico_alvo', 'apenas_para_professores', 'eh_gratuita')
+#     list_filter = ('categoria', 'apenas_para_professores', 'eh_gratuita', 'publico_alvo')
+#     search_fields = ('nome', 'descricao', 'autor')
+#     autocomplete_fields = ['categoria']
+#     readonly_fields = ('imagem_capa_url', 'arquivo_pdf_url') # Deixa os campos de URL apenas para leitura
+# 
+#     fieldsets = (
+#         ('Informações Principais', {
+#             'fields': ('nome', 'categoria', 'descricao', 'autor')
+#         }),
+#         ('Arquivos e Imagens', {
+#             # Alterado para os novos campos de upload e URL
+#             'fields': ('imagem_capa_upload', 'imagem_capa_url', 'arquivo_pdf_upload', 'arquivo_pdf_url')
+#         }),
+#         ('Detalhes Pedagógicos', {
+#             'fields': ('publico_alvo', 'habilidades_desenvolvidas')
+#         }),
+#         ('Configurações e Acesso', {
+#             'fields': ('apenas_para_professores', 'eh_gratuita', 'classificacao', 'icone_classe')
+#         }),
+#     )
+#     
+#     def save_model(self, request, obj, form, change):
+#         # Verifica se uma nova imagem de capa foi enviada
+#         if 'imagem_capa_upload' in form.cleaned_data and form.cleaned_data['imagem_capa_upload']:
+#             capa_file = form.cleaned_data['imagem_capa_upload']
+#             public_url, error = _upload_to_supabase(
+#                 capa_file, 
+#                 bucket_name="arquivos-producao", 
+#                 sub_folder='ferramentas_capas'
+#             )
+#             if public_url:
+#                 obj.imagem_capa_url = public_url
+#             else:
+#                 self.message_user(request, f"Erro ao salvar a imagem de capa: {error}", level='error')
+# 
+#         # Verifica se um novo arquivo PDF foi enviado
+#         if 'arquivo_pdf_upload' in form.cleaned_data and form.cleaned_data['arquivo_pdf_upload']:
+#             pdf_file = form.cleaned_data['arquivo_pdf_upload']
+#             public_url, error = _upload_to_supabase(
+#                 pdf_file, 
+#                 bucket_name="arquivos-producao", 
+#                 sub_folder='ferramentas_pdfs'
+#             )
+#             if public_url:
+#                 obj.arquivo_pdf_url = public_url
+#             else:
+#                 self.message_user(request, f"Erro ao salvar o arquivo PDF: {error}", level='error')
+#         
+#         super().save_model(request, obj, form, change)
 
-    fieldsets = (
-        ('Informações Principais', {
-            'fields': ('nome', 'categoria', 'descricao', 'autor')
-        }),
-        ('Arquivos e Imagens', {
-            # Alterado para os novos campos de upload e URL
-            'fields': ('imagem_capa_upload', 'imagem_capa_url', 'arquivo_pdf_upload', 'arquivo_pdf_url')
-        }),
-        ('Detalhes Pedagógicos', {
-            'fields': ('publico_alvo', 'habilidades_desenvolvidas')
-        }),
-        ('Configurações e Acesso', {
-            'fields': ('apenas_para_professores', 'eh_gratuita', 'classificacao', 'icone_classe')
-        }),
-    )
-    
-    def save_model(self, request, obj, form, change):
-        # Verifica se uma nova imagem de capa foi enviada
-        if 'imagem_capa_upload' in form.cleaned_data and form.cleaned_data['imagem_capa_upload']:
-            capa_file = form.cleaned_data['imagem_capa_upload']
-            public_url, error = _upload_to_supabase(
-                capa_file, 
-                bucket_name="arquivos-producao", 
-                sub_folder='ferramentas_capas'
-            )
-            if public_url:
-                obj.imagem_capa_url = public_url
-            else:
-                self.message_user(request, f"Erro ao salvar a imagem de capa: {error}", level='error')
 
-        # Verifica se um novo arquivo PDF foi enviado
-        if 'arquivo_pdf_upload' in form.cleaned_data and form.cleaned_data['arquivo_pdf_upload']:
-            pdf_file = form.cleaned_data['arquivo_pdf_upload']
-            public_url, error = _upload_to_supabase(
-                pdf_file, 
-                bucket_name="arquivos-producao", 
-                sub_folder='ferramentas_pdfs'
-            )
-            if public_url:
-                obj.arquivo_pdf_url = public_url
-            else:
-                self.message_user(request, f"Erro ao salvar o arquivo PDF: {error}", level='error')
-        
-        super().save_model(request, obj, form, change)
-
-
-@admin.register(UserDownload)
-class UserDownloadAdmin(admin.ModelAdmin):
-    list_display = ('user', 'ferramenta', 'data_download')
-    list_filter = ('data_download',)
-    search_fields = ('user__username', 'ferramenta__nome')
-
+# --- COMENTADO: DOWNLOADS ---
+# @admin.register(UserDownload)
+# class UserDownloadAdmin(admin.ModelAdmin):
+#     list_display = ('user', 'ferramenta', 'data_download')
+#     list_filter = ('data_download',)
+#     search_fields = ('user__username', 'ferramenta__nome')
